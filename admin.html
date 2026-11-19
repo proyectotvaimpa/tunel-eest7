@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Túnel · Mantenimiento</title>
+<meta name="robots" content="noindex">
+<style>
+:root{
+  --bg:#F2F2F7; --surface:#FFFFFF; --surface-2:#F2F2F7; --fill:rgba(120,120,128,.14); --line:rgba(60,60,67,.13);
+  --fg:#000; --muted:rgba(60,60,67,.62); --accent:#007AFF; --accent-soft:rgba(0,122,255,.12); --temp:#FF9500;
+  --ok:#34C759; --warn:#FF9500; --bad:#FF3B30; --ok-soft:rgba(52,199,89,.15); --bad-soft:rgba(255,59,48,.12); --warn-soft:rgba(255,149,0,.15);
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 6px 20px rgba(0,0,0,.05);
+  --heat0:rgba(0,122,255,.10); --heat1:rgba(0,122,255,.28); --heat2:rgba(0,122,255,.5); --heat3:rgba(0,122,255,.78);
+  --f:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",system-ui,sans-serif;
+  --f-round:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  --r:20px; --gap:14px; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#000; --surface:#1C1C1E; --surface-2:#2C2C2E; --fill:rgba(120,120,128,.3); --line:rgba(84,84,88,.5);
+  --fg:#fff; --muted:rgba(235,235,245,.6); --accent:#0A84FF; --accent-soft:rgba(10,132,255,.22); --temp:#FF9F0A;
+  --ok:#30D158; --warn:#FF9F0A; --bad:#FF453A; --ok-soft:rgba(48,209,88,.18); --bad-soft:rgba(255,69,58,.2); --warn-soft:rgba(255,159,10,.2);
+  --shadow:none; --heat0:rgba(10,132,255,.14); --heat1:rgba(10,132,255,.32); --heat2:rgba(10,132,255,.55); --heat3:rgba(10,132,255,.85); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#000; --surface:#1C1C1E; --surface-2:#2C2C2E; --fill:rgba(120,120,128,.3); --line:rgba(84,84,88,.5);
+  --fg:#fff; --muted:rgba(235,235,245,.6); --accent:#0A84FF; --accent-soft:rgba(10,132,255,.22); --temp:#FF9F0A;
+  --ok:#30D158; --warn:#FF9F0A; --bad:#FF453A; --ok-soft:rgba(48,209,88,.18); --bad-soft:rgba(255,69,58,.2); --warn-soft:rgba(255,159,10,.2);
+  --shadow:none; --heat0:rgba(10,132,255,.14); --heat1:rgba(10,132,255,.32); --heat2:rgba(10,132,255,.55); --heat3:rgba(10,132,255,.85); color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f);font-size:15px;-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
+.app{max-width:1280px;margin:0 auto;padding:14px 18px 24px;display:flex;flex-direction:column;gap:var(--gap)}
+.num{font-family:var(--f-round);font-variant-numeric:tabular-nums}
+.eyebrow{font-size:13px;font-weight:600;color:var(--muted)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent-soft);outline-offset:2px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 20px;padding-inline:4px}
+.brand{display:flex;align-items:center;gap:14px;min-width:0}
+.appicon{width:52px;height:52px;border-radius:12px;flex:none;background:linear-gradient(160deg,#FFB340,#FF9500 55%,#FF5E3A);display:grid;place-items:center;box-shadow:0 2px 8px rgba(255,149,0,.3)}
+h1{margin:0;font-size:32px;font-weight:700;letter-spacing:-.025em;line-height:1.05}
+.brand p{margin:3px 0 0;color:var(--muted);font-size:14px}
+.hright{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow);white-space:nowrap;color:var(--muted)}
+.chip i{width:8px;height:8px;border-radius:50%;background:currentColor}
+.chip.ok{color:var(--ok)} .chip.sim{color:var(--warn);background:var(--warn-soft);box-shadow:none}
+.panel{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:16px 18px;min-width:0}
+.btn{background:var(--accent-soft);color:var(--accent);border:0;border-radius:12px;padding:9px 14px;font-size:14px;font-weight:600;cursor:pointer}
+.btn.primary{background:var(--accent);color:#fff} .btn.ghost{background:none;padding:6px 10px}
+.btn:active{transform:scale(.97)}
+a{color:var(--accent);text-decoration:none}
+
+/* Tarjetas de resumen */
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--gap)}
+.stat .v{font-family:var(--f-round);font-weight:700;font-size:30px;line-height:1.15;font-variant-numeric:tabular-nums;letter-spacing:-.01em;margin-top:4px}
+.stat .v small{font-size:15px;color:var(--muted);font-weight:600;margin-left:4px}
+.stat .s{font-size:13px;color:var(--muted);margin-top:2px}
+.stat.due .v{color:var(--warn)} .stat.over .v{color:var(--bad)}
+.meter{height:6px;border-radius:3px;background:var(--fill);margin-top:8px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.stat.due .meter i{background:var(--warn)} .stat.over .meter i{background:var(--bad)}
+
+/* Calendario + día */
+.grid2{align-items:start;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:var(--gap)}
+.calhead{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.calhead h2{margin:0;font-size:22px;font-weight:700;letter-spacing:-.02em;flex:1}
+.calhead .tot{font-size:13px;color:var(--muted);font-weight:600}
+.nav{width:34px;height:34px;border-radius:50%;border:0;background:var(--fill);cursor:pointer;display:grid;place-items:center}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.dow{font-size:12px;font-weight:600;color:var(--muted);text-align:center;padding:2px 0 4px;text-transform:uppercase}
+.day{aspect-ratio:1/0.82;border:0;border-radius:12px;background:var(--surface-2);padding:6px 7px;text-align:left;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;min-width:0;position:relative}
+.day.out{visibility:hidden}
+.day .n{font-size:13px;font-weight:600}
+.day .h{font-family:var(--f-round);font-size:12px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden}
+.day.l0{background:var(--heat0)} .day.l1{background:var(--heat1)} .day.l2{background:var(--heat2)} .day.l3{background:var(--heat3)}
+.day.l2 .n,.day.l3 .n,.day.l2 .h,.day.l3 .h{color:#fff}
+.day.today .n{color:var(--accent)} .day.today{box-shadow:inset 0 0 0 2px var(--accent)}
+.day.sel{box-shadow:inset 0 0 0 2.5px var(--fg)}
+.day .mk{position:absolute;top:6px;right:6px;display:flex;gap:3px}
+.day .mk i{width:7px;height:7px;border-radius:50%}
+.mk .a{background:var(--bad)} .mk .m{background:var(--ok)}
+.calleg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);margin-top:10px;align-items:center}
+.calleg .sw{display:inline-flex;gap:3px;vertical-align:middle}
+.calleg .sw b{width:14px;height:10px;border-radius:3px;display:inline-block}
+.calleg .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:0}
+
+/* Listas */
+h3{margin:0 0 10px;font-size:18px;font-weight:700;letter-spacing:-.015em}
+.list{background:var(--surface-2);border-radius:14px;overflow:hidden}
+.item{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;align-items:center;padding:10px 12px}
+.item + .item{border-top:1px solid var(--line)}
+.item .tm{font-family:var(--f-round);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.item .sub{font-size:12.5px;color:var(--muted)}
+.item .dur{font-family:var(--f-round);font-weight:700;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.item .dur.run{color:var(--ok)}
+.item .bad{color:var(--bad)}
+.empty{color:var(--muted);font-size:14px;padding:14px 12px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font-size:12px;color:var(--muted);font-weight:600;text-align:left;padding:6px 10px;white-space:nowrap}
+td{padding:9px 10px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}
+td.r,th.r{text-align:right}
+td.bad{color:var(--bad);font-weight:600}
+.tablewrap{overflow-x:auto;background:var(--surface-2);border-radius:14px}
+.rowh{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.rowh h3{margin:0;flex:1}
+.seg{display:inline-flex;border-radius:10px;padding:2px;background:var(--fill)}
+.seg button{background:none;border:0;padding:5px 11px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer}
+.seg button.on{background:var(--surface);box-shadow:0 2px 6px rgba(0,0,0,.12);font-weight:600}
+#bars{width:100%;height:170px;display:block}
+
+/* Formulario */
+form.mant{display:grid;grid-template-columns:150px 1fr 160px auto;gap:8px;margin-bottom:12px}
+.field{background:var(--surface-2);border:0;border-radius:10px;padding:9px 11px;min-width:0}
+.msg{font-size:13px;color:var(--muted);min-height:18px}
+.msg.bad{color:var(--bad)}
+
+/* Login */
+.login{max-width:380px;margin:12vh auto 0;display:flex;flex-direction:column;gap:10px;text-align:center}
+.login .appicon{margin:0 auto 6px}
+.login h1{font-size:28px}
+.login p{color:var(--muted);margin:0 0 8px;font-size:14px}
+.login .field{padding:12px 14px;text-align:left}
+
+@media (max-width:980px){ .grid2{grid-template-columns:minmax(0,1fr)} .stats{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:640px){
+  .app{padding-inline:12px} h1{font-size:26px}
+  .cal{gap:4px} .day{border-radius:9px;padding:4px 5px} .day .h{font-size:10.5px} .day .n{font-size:12px}
+  .stat .v{font-size:24px}
+  form.mant{grid-template-columns:1fr 1fr} form.mant .que{grid-column:1/-1;order:-1}
+}
+</style>
+</head>
+<body>
+
+<div class="login" id="login" hidden>
+  <div class="appicon" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+  <h1>Mantenimiento</h1>
+  <p>Acceso para docentes del Laboratorio de Aeronáutica.</p>
+  <form id="fLogin" style="display:contents">
+    <input class="field" id="lUser" type="email" placeholder="Correo" autocomplete="username" required>
+    <input class="field" id="lPass" type="password" placeholder="Clave" autocomplete="current-password" required>
+    <button class="btn primary" type="submit">Entrar</button>
+  </form>
+  <div class="msg" id="lMsg"></div>
+  <a href="index.html">← Volver a los datos en vivo</a>
+</div>
+
+<div class="app" id="app" hidden>
+  <header>
+    <div class="brand">
+      <div class="appicon" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg></div>
+      <div><h1>Mantenimiento y puestas en marcha</h1><p>Túnel de Viento · E.E.S.T. N°7 “TRQ/IMPA”</p></div>
+    </div>
+    <div class="hright">
+      <span class="chip" id="cSrc"><i></i>…</span>
+      <span class="chip" id="cNow"><i></i>…</span>
+      <a class="btn ghost" href="index.html">Datos en vivo</a>
+      <button class="btn ghost" id="bOut">Salir</button>
+    </div>
+  </header>
+
+  <section class="stats">
+    <div class="panel stat"><div class="eyebrow">Horómetro del motor</div><div class="v num" id="sTot">–</div><div class="s" id="sTotS">&nbsp;</div></div>
+    <div class="panel stat" id="stMant"><div class="eyebrow">Desde el último mantenimiento</div><div class="v num" id="sMant">–</div><div class="meter"><i id="sMantBar" style="width:0"></i></div><div class="s" id="sMantS">&nbsp;</div></div>
+    <div class="panel stat"><div class="eyebrow">Puestas en marcha · este mes</div><div class="v num" id="sMes">–</div><div class="s" id="sMesS">&nbsp;</div></div>
+    <div class="panel stat"><div class="eyebrow">Última puesta en marcha</div><div class="v num" id="sUlt">–</div><div class="s" id="sUltS">&nbsp;</div></div>
+  </section>
+
+  <section class="grid2">
+    <div class="panel">
+      <div class="calhead">
+        <button class="nav" id="mPrev" aria-label="Mes anterior"><svg width="9" height="14" viewBox="0 0 8 13"><path d="M6.5 1.5 1.5 6.5l5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <h2 id="mTitle">–</h2>
+        <span class="tot" id="mTot"></span>
+        <button class="nav" id="mNext" aria-label="Mes siguiente"><svg width="9" height="14" viewBox="0 0 8 13"><path d="m1.5 1.5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <div class="cal" id="cal"></div>
+      <div class="calleg">
+        <span>Horas de uso <span class="sw"><b style="background:var(--surface-2)"></b><b style="background:var(--heat0)"></b><b style="background:var(--heat1)"></b><b style="background:var(--heat2)"></b><b style="background:var(--heat3)"></b></span></span>
+        <span><i class="dot" style="background:var(--bad)"></i>alarma</span>
+        <span><i class="dot" style="background:var(--ok)"></i>mantenimiento</span>
+      </div>
+    </div>
+    <div class="panel">
+      <h3 id="dTitle">–</h3>
+      <div class="list" id="dList"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="rowh"><h3>Horas de uso por mes</h3><span class="eyebrow" id="bYear"></span></div>
+    <canvas id="bars"></canvas>
+  </section>
+
+  <section class="panel">
+    <div class="rowh">
+      <h3>Puestas en marcha</h3>
+      <div class="seg" id="fSeg"><button data-f="mes" class="on">Este mes</button><button data-f="todo">Todas</button></div>
+    </div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Fecha</th><th>Inicio</th><th>Fin</th><th class="r">Duración</th><th class="r">Velocidad máx.</th><th class="r">Fuerza máx.</th><th class="r">T motor máx.</th><th class="r">Vibración máx.</th><th class="r">T interna máx.</th><th class="r">Datos</th></tr></thead>
+      <tbody id="tRuns"></tbody>
+    </table></div>
+  </section>
+
+  <section class="panel">
+    <div class="rowh">
+      <h3>Datos guardados (historial)</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <input class="field" type="date" id="hDia" style="width:auto">
+        <button class="btn" id="hVer">Ver</button>
+        <button class="btn primary" id="hCsv">Bajar para Excel (CSV)</button>
+      </div>
+    </div>
+    <div class="msg" id="hMsg" style="margin:0 0 8px">Cada 2 s con el túnel en marcha y cada 60 s parado. Elegí un día y tocá Ver.</div>
+    <div class="tablewrap" style="max-height:360px;overflow:auto"><table>
+      <thead><tr><th>Hora</th><th class="r">Velocidad</th><th class="r">q</th><th class="r">Fuerza</th><th class="r">Masa celda</th><th class="r">ρ</th><th class="r">T amb.</th><th class="r">P amb.</th><th class="r">T int.</th><th class="r">T motor</th><th class="r">Vibración</th></tr></thead>
+      <tbody id="tHist"><tr><td colspan="11" style="color:var(--muted)">–</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section class="grid2">
+    <div class="panel">
+      <h3>Mantenimiento</h3>
+      <form class="mant" id="fMant">
+        <input class="field" type="date" id="mFecha" required>
+        <input class="field que" id="mQue" placeholder="Qué se hizo (ej.: engrase de rodamientos)" required>
+        <input class="field" id="mQuien" placeholder="Quién" required>
+        <button class="btn primary" type="submit">Anotar</button>
+      </form>
+      <div class="msg" id="mMsg"></div>
+      <div class="list" id="lMant"></div>
+    </div>
+    <div class="panel">
+      <h3>Alarmas registradas</h3>
+      <div class="list" id="lAlm"></div>
+    </div>
+  </section>
+</div>
+
+<script src="config.js"></script>
+<script>
+(function(){
+'use strict';
+// ===== Configuración (la misma de Firebase que usa index.html) =====
+const FIREBASE_URL=((window.TUNEL_CONFIG||{}).FIREBASE_URL||'').trim();          // se completa en config.js
+const FIREBASE_API_KEY=((window.TUNEL_CONFIG||{}).FIREBASE_API_KEY||'').trim();  // se completa en config.js
+const RAIZ='/tunel';
+const SERVICE_HORAS=100;      // horas de motor entre mantenimientos (a definir con el docente)
+const VIB_ALARMA=0.30, TMOT_ALARMA=75;
+
+const $=id=>document.getElementById(id);
+const QS=new URLSearchParams(location.search);
+const DEMO=QS.has('demo');
+const fmt=(v,d=1)=>Number(v).toLocaleString('es-AR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DIA=86400000;
+const dkey=t=>{const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const hhmm=t=>new Date(t).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+const fecha=t=>new Date(t).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
+const durTxt=s=>{s=Math.round(s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h} h ${String(m).padStart(2,'0')} min`:m?`${m} min`:`${s} s`;};
+const horas=s=>s/3600;
+
+// ===== Sesión (Firebase Auth por REST) =====
+let token=null;
+try{ const t=JSON.parse(sessionStorage.getItem('tunelAuth')||'null'); if(t&&t.exp>Date.now())token=t; }catch(e){}
+async function login(email,pass){
+  const r=await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`,
+    {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass,returnSecureToken:true})});
+  const j=await r.json(); if(!r.ok)throw new Error(j.error&&j.error.message||'error');
+  token={id:j.idToken,email:j.email,exp:Date.now()+(+j.expiresIn-60)*1000};
+  try{sessionStorage.setItem('tunelAuth',JSON.stringify(token));}catch(e){}
+}
+function logout(){token=null;try{sessionStorage.removeItem('tunelAuth');}catch(e){} location.reload();}
+const LOGIN_ERR={EMAIL_NOT_FOUND:'Ese correo no tiene cuenta.',INVALID_PASSWORD:'Clave incorrecta.',INVALID_LOGIN_CREDENTIALS:'Correo o clave incorrectos.',TOO_MANY_ATTEMPTS_TRY_LATER:'Demasiados intentos. Probá en unos minutos.'};
+
+// ===== Base de datos =====
+async function dbGet(path){
+  if(DEMO)return DEMO_DB[path]||null;
+  const r=await fetch(`${FIREBASE_URL.replace(/\/$/,'')}${RAIZ}/${path}.json?auth=${token.id}`,{cache:'no-store'});
+  if(r.status===401||r.status===403){logout();return null;}
+  return r.json();
+}
+// historial entre dos horas (ms). Firebase filtra por "ts" (regla .indexOn).
+async function dbRango(path,a,b){
+  if(DEMO)return demoHist(a,b);
+  const q=`orderBy=${encodeURIComponent('"ts"')}&startAt=${a}&endAt=${b}`;
+  const r=await fetch(`${FIREBASE_URL.replace(/\/$/,'')}${RAIZ}/${path}.json?auth=${token.id}&${q}`,{cache:'no-store'});
+  if(r.status===401||r.status===403){logout();return null;}
+  if(!r.ok)throw new Error('Firebase respondió '+r.status+(r.status===400?' (¿falta pegar las reglas nuevas con "historial"?)':''));
+  return r.json();
+}
+async function dbPush(path,obj){
+  if(DEMO){const id='d'+Date.now();(DEMO_DB[path]=DEMO_DB[path]||{})[id]=obj;return;}
+  const r=await fetch(`${FIREBASE_URL.replace(/\/$/,'')}${RAIZ}/${path}.json?auth=${token.id}`,{method:'POST',body:JSON.stringify(obj)});
+  if(!r.ok)throw new Error('No se pudo guardar ('+r.status+')');
+}
+
+// ===== Datos de demostración =====
+const DEMO_DB={};
+function demoHist(a,b){const o={};const hoy=new Date();hoy.setHours(10,0,0,0);let t=Math.max(a,hoy.getTime()-3600000);const fin=Math.min(b,Date.now());let i=0;
+  while(t<fin&&i<3000){const on=(t/60000)%30<12;const v=on?13+Math.sin(t/9e4):0;
+    o['h'+t]={ts:t,m:on?1:0,v:+v.toFixed(2),dp:+(0.5*1.19*v*v).toFixed(2),rho:1.19,kg:+(v*v*0.0016).toFixed(3),ta:21.4,pa:1012.6,ti:22+(on?1.5:0),pi:1012.9,tm:25+(on?6:0),vib:on?0.1:0.004};
+    t+=on?2000:60000;i++;}return o;}
+if(DEMO){
+  let seed=7; const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  const runs={}, alm={}, man={}; const hoy=new Date(); hoy.setHours(0,0,0,0);
+  for(let d=150;d>=0;d--){
+    const day=new Date(hoy.getTime()-d*DIA), wd=day.getDay(); if(wd===0||wd===6||rnd()<0.45)continue;
+    const n=1+Math.floor(rnd()*2.4);
+    for(let k=0;k<n;k++){
+      const ini=day.getTime()+(8+k*3+rnd()*2)*3600000, dur=(8+rnd()*70)*60;
+      const vib=0.06+rnd()*0.12+(rnd()<0.06?0.25:0), tm=30+dur/60*0.35+rnd()*8;
+      runs['r'+ini]={ini,fin:ini+dur*1000,dur_s:Math.round(dur),tmot_max:+tm.toFixed(1),vib_max:+vib.toFixed(3),tin_max:+(22+dur/600+rnd()*2).toFixed(1),det:'vibracion'};
+      if(vib>VIB_ALARMA)alm['a'+ini]={ts:ini+dur*600,tipo:'Vibración alta',valor:vib.toFixed(3)+' g'};
+    }
+  }
+  man['m1']={ts:hoy.getTime()-120*DIA+10*3600000,que:'Revisión general y ajuste de bulones de la hélice',quien:'Prof. de taller',horas_motor:3.1};
+  man['m2']={ts:hoy.getTime()-41*DIA+15*3600000,que:'Engrase de rodamientos del motor',quien:'6.º año',horas_motor:0};
+  DEMO_DB.corridas=runs; DEMO_DB.alarmas=alm; DEMO_DB.mantenimiento=man;
+  const last=Object.values(runs).sort((a,b)=>b.ini-a.ini)[0]; if(last){}
+}
+
+// ===== Estado =====
+let RUNS=[], ALM=[], MANT=[], VIVO=null;
+const view={y:new Date().getFullYear(),m:new Date().getMonth(),sel:dkey(Date.now()),filtro:'mes'};
+
+async function cargar(){
+  const [c,a,m]=await Promise.all([dbGet('corridas'),dbGet('alarmas'),dbGet('mantenimiento')]);
+  RUNS=Object.values(c||{}).filter(r=>r&&r.ini).map(r=>{
+    // si se cortó la luz con el motor andando no hay "fin": se toma el último aviso del ESP32
+    const fin=r.fin||(r.ult&&Date.now()-r.ult>120000?r.ult:null);
+    return {...r,fin,dur:fin?(fin-r.ini)/1000:(Date.now()-r.ini)/1000};}).sort((x,y)=>y.ini-x.ini);
+  ALM=Object.values(a||{}).filter(x=>x&&x.ts).sort((x,y)=>y.ts-x.ts);
+  MANT=Object.values(m||{}).filter(x=>x&&x.ts).sort((x,y)=>y.ts-x.ts);
+  if(!DEMO&&FIREBASE_URL){try{VIVO=await (await fetch(`${FIREBASE_URL.replace(/\/$/,'')}${RAIZ}/vivo.json`,{cache:'no-store'})).json();}catch(e){VIVO=null;}}
+  render();
+}
+
+// ===== Dibujo =====
+function render(){
+  const enCurso=RUNS.find(r=>!r.fin);
+  $('cSrc').className='chip '+(DEMO?'sim':'ok'); $('cSrc').innerHTML='<i></i>'+(DEMO?'Demostración':esc(token&&token.email||'Conectado'));
+  const vivoOk=DEMO?true:(VIVO&&VIVO.ts&&Date.now()-VIVO.ts<15000);
+  $('cNow').className='chip '+(enCurso?'ok':''); $('cNow').innerHTML='<i></i>'+(enCurso?'Motor en marcha ahora':vivoOk?'Motor detenido':'Túnel sin conexión');
+
+  // Resumen
+  const tot=RUNS.reduce((s,r)=>s+r.dur,0);
+  $('sTot').innerHTML=fmt(horas(tot),1)+'<small>h</small>';
+  $('sTotS').textContent=RUNS.length?`${RUNS.length} puestas en marcha desde el ${fecha(RUNS[RUNS.length-1].ini)}`:'Todavía no hay registros';
+  const um=MANT[0], desde=um?RUNS.filter(r=>r.ini>=um.ts).reduce((s,r)=>s+r.dur,0)/3600:horas(tot);
+  const pct=desde/SERVICE_HORAS;
+  $('sMant').innerHTML=fmt(desde,1)+'<small>de '+SERVICE_HORAS+' h</small>';
+  $('sMantBar').style.width=Math.min(100,pct*100)+'%';
+  $('stMant').className='panel stat'+(pct>=1?' over':pct>=0.85?' due':'');
+  $('sMantS').textContent=um?`Último: ${fecha(um.ts)} · ${um.que}`:'Sin mantenimientos anotados';
+  const now=new Date(), mesRuns=RUNS.filter(r=>{const d=new Date(r.ini);return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();});
+  $('sMes').textContent=mesRuns.length;
+  $('sMesS').textContent=fmt(horas(mesRuns.reduce((s,r)=>s+r.dur,0)),1)+' h de uso en '+now.toLocaleDateString('es-AR',{month:'long'});
+  const ult=RUNS[0];
+  $('sUlt').textContent=ult?fecha(ult.ini):'–';
+  $('sUltS').textContent=ult?(ult.fin?`${hhmm(ult.ini)} a ${hhmm(ult.fin)} · ${durTxt(ult.dur)}`:`En marcha desde las ${hhmm(ult.ini)}`):' ';
+
+  renderCal(); renderDay(); renderBars(); renderTable(); renderMant(); renderAlm();
+}
+
+function porDia(){
+  const m={}; for(const r of RUNS){const k=dkey(r.ini);(m[k]=m[k]||{s:0,n:0,runs:[],alm:[],man:[]});m[k].s+=r.dur;m[k].n++;m[k].runs.push(r);}
+  for(const a of ALM){const k=dkey(a.ts);(m[k]=m[k]||{s:0,n:0,runs:[],alm:[],man:[]}).alm.push(a);}
+  for(const x of MANT){const k=dkey(x.ts);(m[k]=m[k]||{s:0,n:0,runs:[],alm:[],man:[]}).man.push(x);}
+  return m;
+}
+function renderCal(){
+  const DD=porDia(), {y,m}=view, first=new Date(y,m,1), days=new Date(y,m+1,0).getDate();
+  const off=(first.getDay()+6)%7; // semana empieza el lunes
+  $('mTitle').textContent=first.toLocaleDateString('es-AR',{month:'long'}).replace(/^./,c=>c.toUpperCase())+' '+y;
+  let tot=0,n=0; let h='';
+  for(const d of ['lu','ma','mi','ju','vi','sá','do'])h+=`<div class="dow">${d}</div>`;
+  for(let i=0;i<off;i++)h+='<div class="day out"></div>';
+  const today=dkey(Date.now());
+  for(let d=1;d<=days;d++){
+    const k=dkey(new Date(y,m,d)), x=DD[k], s=x?x.s:0; tot+=s; n+=x?x.n:0;
+    const hh=s/3600, lvl=!s?'':hh<0.5?' l0':hh<1.5?' l1':hh<3?' l2':' l3';
+    const mk=x&&(x.alm.length||x.man.length)?`<span class="mk">${x.alm.length?'<i class="a"></i>':''}${x.man.length?'<i class="m"></i>':''}</span>`:'';
+    h+=`<button class="day${lvl}${k===today?' today':''}${k===view.sel?' sel':''}" data-k="${k}" aria-label="${d}: ${s?durTxt(s):'sin uso'}"><span class="n">${d}</span>${mk}<span class="h">${s?fmt(hh,1)+' h':''}</span></button>`;
+  }
+  $('cal').innerHTML=h;
+  $('mTot').textContent=`${fmt(horas(tot),1)} h · ${n} ${n===1?'vez':'veces'}`;
+  $('cal').querySelectorAll('.day[data-k]').forEach(b=>b.onclick=()=>{view.sel=b.dataset.k;renderCal();renderDay();});
+}
+function renderDay(){
+  const [y,m,d]=view.sel.split('-').map(Number), x=porDia()[view.sel];
+  const t=new Date(y,m-1,d).toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
+  $('dTitle').textContent=t.charAt(0).toUpperCase()+t.slice(1)+(x&&x.s?` · ${durTxt(x.s)}`:'');
+  if(!x){$('dList').innerHTML='<div class="empty">Ese día el túnel no se usó.</div>';return;}
+  const items=[
+    ...x.runs.map(r=>({t:r.ini,h:`<span class="tm">${hhmm(r.ini)}${r.fin?' – '+hhmm(r.fin):''}</span><span class="sub">T motor máx. ${r.tmot_max!=null?fmt(r.tmot_max,1)+' °C':'–'} · vib. máx. <span class="${r.vib_max>VIB_ALARMA?'bad':''}">${r.vib_max!=null?fmt(r.vib_max,3)+' g':'–'}</span></span><span class="dur${r.fin?'':' run'}">${r.fin?durTxt(r.dur):'en marcha'}</span>`})),
+    ...x.alm.map(a=>({t:a.ts,h:`<span class="tm bad">${hhmm(a.ts)}</span><span class="sub bad">${esc(a.tipo)} · ${esc(a.valor)}</span><span></span>`})),
+    ...x.man.map(a=>({t:a.ts,h:`<span class="tm" style="color:var(--ok)">Mant.</span><span class="sub">${esc(a.que)} · ${esc(a.quien)}</span><span></span>`})),
+  ].sort((a,b)=>a.t-b.t);
+  $('dList').innerHTML=items.map(i=>`<div class="item">${i.h}</div>`).join('');
+}
+function renderBars(){
+  const c=$('bars'), dpr=Math.min(devicePixelRatio,2), w=c.clientWidth, h=c.clientHeight; if(!w)return;
+  c.width=Math.round(w*dpr); c.height=Math.round(h*dpr); const x=c.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0);
+  const cs=getComputedStyle(document.documentElement), col=n=>cs.getPropertyValue(n).trim();
+  const now=new Date(), meses=[];
+  for(let i=11;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);meses.push({y:d.getFullYear(),m:d.getMonth(),s:0,lbl:d.toLocaleDateString('es-AR',{month:'short'}).replace('.','')});}
+  for(const r of RUNS){const d=new Date(r.ini);const b=meses.find(q=>q.y===d.getFullYear()&&q.m===d.getMonth());if(b)b.s+=r.dur;}
+  $('bYear').textContent='Últimos 12 meses · '+fmt(horas(meses.reduce((s,b)=>s+b.s,0)),1)+' h';
+  const max=Math.max(1,...meses.map(b=>b.s/3600)), L=6,R=6,T=18,B=22,pw=w-L-R,ph=h-T-B,bw=pw/12;
+  x.font='600 11px ui-rounded,-apple-system,system-ui,sans-serif'; x.textAlign='center';
+  meses.forEach((b,i)=>{const hh=b.s/3600, bh=hh/max*ph, cx=L+i*bw+bw/2, cur=b.y===view.y&&b.m===view.m;
+    x.fillStyle=cur?col('--accent'):col('--heat1'); const bwi=Math.min(bw*0.62,38);
+    const r=Math.min(6,bh/2); x.beginPath(); x.moveTo(cx-bwi/2,T+ph); x.lineTo(cx-bwi/2,T+ph-bh+r); x.quadraticCurveTo(cx-bwi/2,T+ph-bh,cx-bwi/2+r,T+ph-bh); x.lineTo(cx+bwi/2-r,T+ph-bh); x.quadraticCurveTo(cx+bwi/2,T+ph-bh,cx+bwi/2,T+ph-bh+r); x.lineTo(cx+bwi/2,T+ph); x.fill();
+    x.fillStyle=col('--muted'); x.textBaseline='alphabetic'; x.fillText(b.lbl,cx,h-5);
+    if(hh>0){x.fillStyle=cur?col('--accent'):col('--fg'); x.fillText(fmt(hh,hh<10?1:0),cx,T+ph-bh-5);}
+  });
+  c.onclick=e=>{const r=c.getBoundingClientRect(), i=Math.floor((e.clientX-r.left-L)/bw); if(i>=0&&i<12){view.y=meses[i].y;view.m=meses[i].m;renderCal();renderBars();renderTable();}};
+}
+function renderTable(){
+  const runs=view.filtro==='mes'?RUNS.filter(r=>{const d=new Date(r.ini);return d.getFullYear()===view.y&&d.getMonth()===view.m;}):RUNS;
+  const f=(v,d,u,bad)=>v==null?'<td class="r">–</td>':`<td class="r${bad?' bad':''}">${fmt(v,d)} ${u}</td>`;
+  $('tRuns').innerHTML=runs.length?runs.slice(0,300).map(r=>`<tr><td>${fecha(r.ini)}</td><td>${hhmm(r.ini)}</td><td>${r.fin?hhmm(r.fin):'<b style="color:var(--ok)">en marcha</b>'}</td><td class="r">${durTxt(r.dur)}</td>${f(r.v_max,1,'m/s')}${f(r.kg_max==null?null:r.kg_max*9.80665,2,'N')}${f(r.tmot_max,1,'°C',r.tmot_max>TMOT_ALARMA)}${f(r.vib_max,3,'g',r.vib_max>VIB_ALARMA)}${f(r.tin_max,1,'°C')}<td class="r"><button class="btn" style="padding:4px 10px" data-csv="${r.ini}|${r.fin||Date.now()}">CSV</button></td></tr>`).join('')
+    :`<tr><td colspan="10" style="color:var(--muted)">No hay puestas en marcha ${view.filtro==='mes'?'en este mes':'registradas'}.</td></tr>`;
+  document.querySelector('#fSeg [data-f="mes"]').textContent=new Date(view.y,view.m,1).toLocaleDateString('es-AR',{month:'long'}).replace(/^./,c=>c.toUpperCase())+' '+view.y;
+}
+function renderMant(){
+  $('lMant').innerHTML=MANT.length?MANT.map(x=>`<div class="item"><span class="tm">${fecha(x.ts)}</span><span class="sub" style="color:var(--fg)">${esc(x.que)}<br><span style="color:var(--muted)">${esc(x.quien)}</span></span><span class="dur" style="font-weight:600;color:var(--muted)">${x.horas_motor!=null?fmt(x.horas_motor,1)+' h':''}</span></div>`).join('')
+    :'<div class="empty">Todavía no se anotó ningún mantenimiento.</div>';
+}
+function renderAlm(){
+  $('lAlm').innerHTML=ALM.length?ALM.slice(0,50).map(a=>`<div class="item"><span class="tm">${fecha(a.ts)}</span><span class="sub"><span class="bad">${esc(a.tipo)}</span> · ${hhmm(a.ts)}</span><span class="dur bad">${esc(a.valor)}</span></div>`).join('')
+    :'<div class="empty">Sin alarmas registradas.</div>';
+}
+
+// ===== Historial: ver y bajar CSV =====
+const COLS=[['Fecha y hora',null],['En marcha','m',0],['Velocidad (m/s)','v',2],['Presión dinámica (Pa)','dp',2],['Fuerza (N)','F',3],['Masa en la celda (kg)','kg',3],['Densidad (kg/m3)','rho',4],
+  ['T ambiente (°C)','ta',2],['P ambiente (hPa)','pa',2],['T interior (°C)','ti',2],['P interior (hPa)','pi',2],['T motor (°C)','tm',2],['Vibración (g)','vib',4]];
+async function traerHist(a,b){
+  const o=await dbRango('historial',a,b)||{};
+  return Object.values(o).filter(x=>x&&x.ts).map(x=>({...x,F:x.kg==null?null:x.kg*9.80665})).sort((x,y)=>x.ts-y.ts);
+}
+function diaRango(){const [y,m,d]=$('hDia').value.split('-').map(Number);const a=new Date(y,m-1,d).getTime();return [a,a+DIA-1];}
+async function verHist(){
+  $('hMsg').className='msg';$('hMsg').textContent='Buscando…';
+  try{const [a,b]=diaRango(),H=await traerHist(a,b);
+    const c=(v,d,u)=>`<td class="r">${v==null?'–':fmt(v,d)+(u?' '+u:'')}</td>`;
+    $('tHist').innerHTML=H.length?H.slice(-500).reverse().map(x=>`<tr><td>${new Date(x.ts).toLocaleTimeString('es-AR',{hourCycle:'h23'})}${x.m?' <b style="color:var(--ok)">●</b>':''}</td>${c(x.v,1,'m/s')}${c(x.dp,1,'Pa')}${c(x.F,2,'N')}${c(x.kg,3,'kg')}${c(x.rho,3)}${c(x.ta,1,'°C')}${c(x.pa,1,'hPa')}${c(x.ti,1,'°C')}${c(x.tm,1,'°C')}${c(x.vib,3,'g')}</tr>`).join('')
+      :'<tr><td colspan="11" style="color:var(--muted)">No hay datos guardados ese día.</td></tr>';
+    $('hMsg').textContent=H.length?`${H.length} registros ese día${H.length>500?' (se muestran los últimos 500; el CSV tiene todos)':''}. ● = túnel en marcha.`:'Sin datos ese día.';
+  }catch(e){$('hMsg').className='msg bad';$('hMsg').textContent=e.message;}
+}
+async function bajarCsv(a,b,nombre){
+  $('hMsg').className='msg';$('hMsg').textContent='Preparando el archivo…';
+  try{const H=await traerHist(a,b);
+    if(!H.length){$('hMsg').textContent='No hay datos en ese rango.';return;}
+    const num=(v,d)=>v==null?'':Number(v).toFixed(d).replace('.',',');      // Excel en español: coma decimal y ";" entre columnas
+    const filas=[COLS.map(c=>c[0]).join(';')].concat(H.map(x=>COLS.map(c=>c[1]?num(x[c[1]],c[2]):new Date(x.ts).toLocaleString('es-AR',{hourCycle:'h23'})).join(';')));
+    const blob=new Blob(['\ufeff'+filas.join('\r\n')],{type:'text/csv;charset=utf-8'});
+    const el=document.createElement('a');el.href=URL.createObjectURL(blob);el.download=nombre;document.body.appendChild(el);el.click();el.remove();
+    $('hMsg').textContent=`Listo: ${H.length} registros en ${nombre}.`;
+  }catch(e){$('hMsg').className='msg bad';$('hMsg').textContent=e.message;}
+}
+$('hDia').value=dkey(Date.now());
+$('hVer').onclick=verHist;
+$('hCsv').onclick=()=>{const [a,b]=diaRango();bajarCsv(a,b,`tunel_${$('hDia').value}.csv`);};
+$('tRuns').addEventListener('click',e=>{const b=e.target.closest('[data-csv]');if(!b)return;const [a,f]=b.dataset.csv.split('|').map(Number);
+  const d=new Date(a);bajarCsv(a,f,`corrida_${dkey(a)}_${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}.csv`);});
+
+// ===== Eventos =====
+$('mPrev').onclick=()=>{if(--view.m<0){view.m=11;view.y--;}renderCal();renderBars();renderTable();};
+$('mNext').onclick=()=>{if(++view.m>11){view.m=0;view.y++;}renderCal();renderBars();renderTable();};
+document.querySelectorAll('#fSeg button').forEach(b=>b.onclick=()=>{view.filtro=b.dataset.f;document.querySelectorAll('#fSeg button').forEach(o=>o.classList.toggle('on',o===b));renderTable();});
+$('bOut').onclick=logout;
+$('mFecha').value=dkey(Date.now());
+$('fMant').onsubmit=async e=>{
+  e.preventDefault();
+  const [y,m,d]=$('mFecha').value.split('-').map(Number), ts=new Date(y,m-1,d,12).getTime();
+  const um=MANT[0], hs=RUNS.filter(r=>r.ini<ts&&(!um||r.ini>=um.ts)).reduce((s,r)=>s+r.dur,0)/3600;
+  try{
+    await dbPush('mantenimiento',{ts,que:$('mQue').value.trim(),quien:$('mQuien').value.trim(),horas_motor:+hs.toFixed(1),cargado_por:token?token.email:'demo',cargado:Date.now()});
+    $('mQue').value=''; $('mMsg').className='msg'; $('mMsg').textContent='Mantenimiento anotado. El contador de horas vuelve a cero.'; cargar();
+  }catch(err){$('mMsg').className='msg bad';$('mMsg').textContent=err.message;}
+};
+$('fLogin').onsubmit=async e=>{
+  e.preventDefault(); $('lMsg').className='msg'; $('lMsg').textContent='Entrando…';
+  try{await login($('lUser').value.trim(),$('lPass').value);arrancar();}
+  catch(err){$('lMsg').className='msg bad';$('lMsg').textContent=LOGIN_ERR[String(err.message).split(' ')[0]]||'No se pudo entrar: '+err.message;}
+};
+addEventListener('resize',()=>renderBars());
+
+function arrancar(){
+  $('login').hidden=true; $('app').hidden=false; cargar(); setInterval(cargar,30000);
+}
+if(DEMO)arrancar();
+else if(!FIREBASE_URL||!FIREBASE_API_KEY){$('login').hidden=false;$('lMsg').className='msg bad';$('lMsg').textContent='Falta completar FIREBASE_URL y FIREBASE_API_KEY en config.js.';}
+else if(token)arrancar();
+else $('login').hidden=false;
+})();
+</script>
+</body></html>

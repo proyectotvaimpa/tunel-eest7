@@ -1,0 +1,893 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Túnel de Viento EEST N°7</title>
+<style>
+/* Layout: estilo iOS — fondo agrupado, tarjetas blancas redondeadas, barras translúcidas sobre la vista 3D, widgets de instrumentos abajo */
+:root{
+  --bg:#F2F2F7; --surface:#FFFFFF; --surface-2:#F2F2F7; --fill:rgba(120,120,128,.14); --line:rgba(60,60,67,.13);
+  --fg:#000000; --muted:rgba(60,60,67,.62); --accent:#007AFF; --accent-soft:rgba(0,122,255,.12); --temp:#FF9500;
+  --ok:#34C759; --warn:#FF9500; --bad:#FF3B30; --ok-soft:rgba(52,199,89,.15); --bad-soft:rgba(255,59,48,.12); --warn-soft:rgba(255,149,0,.15);
+  --frost:rgba(255,255,255,.72); --shadow:0 1px 2px rgba(0,0,0,.04),0 6px 20px rgba(0,0,0,.05);
+  --scene-bg:#E8EDF3; --scene-grid:#CCD5DF; --scene-edge:#7D8896; --metal:#AEB6C0; --steel:#6B7480; --glass:#5AC8FA;
+  --f:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",system-ui,sans-serif;
+  --f-round:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  --f-data:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:20px; --gap:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#000000; --surface:#1C1C1E; --surface-2:#2C2C2E; --fill:rgba(120,120,128,.3); --line:rgba(84,84,88,.5);
+  --fg:#FFFFFF; --muted:rgba(235,235,245,.6); --accent:#0A84FF; --accent-soft:rgba(10,132,255,.22); --temp:#FF9F0A;
+  --ok:#30D158; --warn:#FF9F0A; --bad:#FF453A; --ok-soft:rgba(48,209,88,.18); --bad-soft:rgba(255,69,58,.2); --warn-soft:rgba(255,159,10,.2);
+  --frost:rgba(30,30,32,.7); --shadow:none;
+  --scene-bg:#0A0B0D; --scene-grid:#1E2228; --scene-edge:#8E9AAB; --metal:#8E8E93; --steel:#48484A; --glass:#64D2FF;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#000000; --surface:#1C1C1E; --surface-2:#2C2C2E; --fill:rgba(120,120,128,.3); --line:rgba(84,84,88,.5);
+  --fg:#FFFFFF; --muted:rgba(235,235,245,.6); --accent:#0A84FF; --accent-soft:rgba(10,132,255,.22); --temp:#FF9F0A;
+  --ok:#30D158; --warn:#FF9F0A; --bad:#FF453A; --ok-soft:rgba(48,209,88,.18); --bad-soft:rgba(255,69,58,.2); --warn-soft:rgba(255,159,10,.2);
+  --frost:rgba(30,30,32,.7); --shadow:none;
+  --scene-bg:#0A0B0D; --scene-grid:#1E2228; --scene-edge:#8E9AAB; --metal:#8E8E93; --steel:#48484A; --glass:#64D2FF;
+  color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--f);font-size:15px;-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
+.app{display:flex;flex-direction:column;gap:var(--gap);padding-inline:18px;padding-block:14px}
+.num{font-family:var(--f-round);font-variant-numeric:tabular-nums}
+.eyebrow{font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0}
+button{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent-soft);outline-offset:2px}
+
+/* Encabezado tipo "large title" */
+header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 20px;padding-inline:4px}
+.brand{display:flex;align-items:center;gap:14px;min-width:0}
+.appicon{width:52px;height:52px;border-radius:12px;flex:none;background:linear-gradient(160deg,#5AC8FA,#007AFF 55%,#3A3AE0);display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,122,255,.3)}
+.brand h1{margin:0;font-size:32px;font-weight:700;letter-spacing:-.025em;line-height:1.05;text-wrap:balance}
+.brand p{margin:3px 0 0;color:var(--muted);font-size:14px}
+.status{display:flex;flex-wrap:wrap;gap:8px;margin-left:auto;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow);white-space:nowrap}
+.chip i{width:8px;height:8px;border-radius:50%;background:currentColor;flex:none}
+.chip.ok{color:var(--ok)} .chip.bad{color:var(--bad);background:var(--bad-soft)}
+.chip.sim{color:var(--warn);background:var(--warn-soft);box-shadow:none}
+.clock{font-family:var(--f-round);font-weight:600;font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums;padding-left:4px}
+
+/* Zona principal */
+main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:var(--gap);flex:1;min-height:0}
+@media (min-width:1181px){
+  .app{height:100vh;height:100dvh;padding-block:12px;gap:12px}
+  .viewport{height:auto!important}
+  aside.detail{overflow:auto;padding:16px}
+  .detail h2{font-size:21px}
+  .instruments .panel{padding:10px 14px!important;gap:6px!important}
+  .instruments{grid-template-columns:150px minmax(0,1.5fr) minmax(0,1fr)!important}
+  #asi{max-width:130px}
+  .kpis{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px}
+  #chart{height:150px!important}
+  .kpi{padding:6px 10px}
+  .kpi .v{font-size:19px}
+  .foot{display:none}
+  header .appicon{width:44px;height:44px} .brand h1{font-size:28px}
+}
+nav.sections{display:none!important}
+
+[hidden]{display:none!important}
+.panel{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);min-width:0}
+
+/* Lista agrupada estilo Ajustes */
+nav.sections{padding:8px;display:flex;flex-direction:column;overflow:auto}
+nav.sections .eyebrow{padding:8px 10px 6px;text-transform:uppercase;font-size:12px;letter-spacing:.02em}
+.sec{display:grid;grid-template-columns:30px 1fr auto 8px;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-radius:12px;padding:8px 10px;cursor:pointer;position:relative}
+.sec + .sec::before{content:"";position:absolute;left:50px;right:10px;top:0;height:1px;background:var(--line)}
+.sec:hover{background:var(--fill)}
+.sec.active{background:var(--accent-soft)} .sec.active::before,.sec.active + .sec::before{opacity:0}
+.sec .ic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:#fff;position:relative}
+.sec .ic svg{width:18px;height:18px}
+.sec .dot{position:absolute;right:-3px;top:-3px;width:11px;height:11px;border-radius:50%;background:var(--bad);border:2px solid var(--surface);display:none}
+.sec .dot.bad{display:block}
+.sec .nm{font-weight:500;font-size:15px;line-height:1.2}
+.sec .vl{font-family:var(--f-round);font-size:14px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.sec .chev{width:8px;height:13px;color:var(--muted);opacity:.6}
+
+/* Vista 3D */
+.viewport{position:relative;overflow:hidden;background:var(--scene-bg)}
+#scene{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#scene:active{cursor:grabbing}
+#labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.glass{background:var(--frost);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px)}
+.lbl{position:absolute;transform:translate(-50%,calc(-100% - 8px));background:var(--frost);-webkit-backdrop-filter:saturate(180%) blur(16px);backdrop-filter:saturate(180%) blur(16px);color:var(--fg);border-radius:12px;padding:5px 10px 6px;font-size:12px;line-height:1.3;white-space:nowrap;pointer-events:auto;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.14)}
+.lbl::after{content:"";position:absolute;left:50%;bottom:-8px;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--frost)}
+.lbl b{display:block;font-weight:600;font-size:12px;color:var(--fg)}
+.lbl span{font-family:var(--f-round);color:var(--muted);font-variant-numeric:tabular-nums}
+.lbl.alarm{box-shadow:0 0 0 2px var(--bad),0 4px 14px rgba(0,0,0,.14)} .lbl.alarm::after{background:var(--bad)} .lbl.alarm b{color:var(--bad)}
+.lbl.sel{box-shadow:0 0 0 2px var(--accent),0 4px 14px rgba(0,0,0,.14)}
+.vtools{position:absolute;top:12px;left:12px;right:12px;display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;pointer-events:none}
+.seg{display:inline-flex;border-radius:10px;padding:2px;pointer-events:auto;background:var(--frost);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.seg button{background:none;border:0;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;color:var(--fg);transition:background .2s,box-shadow .2s}
+.seg button.on{background:var(--surface);box-shadow:0 2px 6px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04);font-weight:600}
+.legend{position:absolute;right:12px;bottom:12px;border-radius:14px;padding:9px 12px;width:210px;font-size:12px;color:var(--muted)}
+.legend .lv{display:block;color:var(--fg);font-size:13px;font-weight:600;margin-bottom:3px}
+.legend .lv b{font-family:var(--f-round);font-size:18px;margin-left:4px;font-variant-numeric:tabular-nums}
+.legend .lv b.pend{font-size:13px;color:var(--muted)}
+.legend{width:240px!important}
+.legend .bar{height:6px;border-radius:3px;margin-top:6px;background:linear-gradient(90deg,#2b5cff,#00c2ff,#2bd96b,#ffd23f,#ff4d3d)}
+.legend .sc{display:flex;justify-content:space-between;font-family:var(--f-round);font-size:11px;margin-top:4px}
+.hint{position:absolute;left:12px;bottom:12px;font-size:12px;color:var(--muted);border-radius:12px;padding:7px 11px}
+.banner{position:absolute;left:50%;top:58px;transform:translateX(-50%);display:flex;gap:10px;align-items:center;border-radius:16px;padding:10px 16px;font-weight:600;font-size:14px;box-shadow:0 8px 28px rgba(0,0,0,.18);max-width:calc(100% - 24px)}
+.banner::before{content:"!";display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--bad);color:#fff;font-weight:800;font-size:14px;flex:none}
+
+/* Ficha técnica: lista agrupada */
+aside.detail{padding:18px;display:flex;flex-direction:column;gap:12px}
+.detail h2{margin:0;font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1.1;text-wrap:balance}
+.detail p{margin:0;color:var(--muted);font-size:14px;line-height:1.45}
+.spec{width:100%;border-collapse:separate;border-spacing:0;background:var(--surface-2);border-radius:14px;overflow:hidden}
+.spec td{padding:10px 12px;vertical-align:middle;position:relative}
+.spec tr + tr td{border-top:1px solid var(--line)}
+.spec td small{display:block;color:var(--muted);font-size:12px;margin-top:1px}
+.spec td.v{text-align:right;font-family:var(--f-round);font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.spec td.v.bad{color:var(--bad)}
+.btn{background:var(--accent-soft);color:var(--accent);border:0;border-radius:12px;padding:9px 14px;font-size:14px;font-weight:600;cursor:pointer;transition:transform .1s,filter .2s}
+.btn:hover{filter:brightness(.97)} .btn:active{transform:scale(.97)}
+.btn.danger{background:var(--bad-soft);color:var(--bad)}
+.btn.rec{background:var(--bad-soft);color:var(--bad)}
+.btn.primary{background:var(--accent);color:#fff}
+
+/* Widgets */
+.instruments{display:grid;grid-template-columns:250px minmax(0,1.3fr) minmax(0,1fr);gap:var(--gap);align-items:start}
+.instruments .p-det{padding:16px 18px}
+.instruments .panel{padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+#asi{width:100%;max-width:210px;aspect-ratio:1;align-self:center;display:block}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.kpi{background:var(--surface-2);border-radius:14px;padding:9px 11px;min-width:0}
+.kpi .k{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .v{font-family:var(--f-round);font-weight:700;font-size:21px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.kpi .v small{font-size:12px;color:var(--muted);font-weight:600;margin-left:3px}
+#chart{width:100%;height:170px;display:block}
+.chart-leg{display:flex;gap:16px;font-size:12px;color:var(--muted)}
+.chart-leg i{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:-1px;margin-right:6px}
+.ctl label{display:flex;justify-content:space-between;font-size:14px}
+.ctl label b{font-family:var(--f-round);font-weight:600;color:var(--accent)}
+.ctl input[type=range]{width:100%;accent-color:var(--accent);margin:2px 0 4px}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.lock{font-size:13px;color:var(--bad);min-height:17px}
+.recinfo{font-size:12.5px;color:var(--muted)}
+.pend{font-size:13px;font-weight:600;color:var(--muted);font-family:var(--f)}
+.kpi.bad .v{color:var(--bad)}
+.chip{color:var(--muted)}
+.foot{text-align:center;font-size:12px;color:var(--muted);padding:2px 0 6px}
+#copyBox{width:100%;height:70px;font-family:var(--f-data);font-size:11px;background:var(--surface-2);color:var(--fg);border:0;border-radius:10px;padding:8px}
+
+@media (max-width:1180px){
+  .app{height:auto;display:flex;flex-direction:column}
+  main,.instruments{display:contents}
+  header{order:0} .viewport{order:1;height:62vh;min-height:360px} .p-asi{order:2} .p-kpi{order:3}
+  nav.sections{order:4;overflow:visible} .p-det{order:5} .p-chart{order:6} .foot{order:8}
+  .p-asi{flex-direction:row!important;align-items:center;justify-content:center;gap:18px}
+  .p-asi .eyebrow{position:absolute;margin:0}
+  .p-asi{position:relative;padding-top:38px!important}
+  .p-asi .eyebrow{top:16px;left:18px}
+}
+@media (max-width:640px){
+  .instruments{grid-template-columns:minmax(0,1fr)}
+  .brand h1{font-size:26px}
+  .legend{width:150px}
+  .hint{display:none}
+  .lbl{font-size:10.5px;padding:4px 8px}
+  .kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .kpi .v{font-size:18px}
+}
+/* Celular: túnel y datos en la primera pantalla, la ficha abajo */
+@media (max-width:640px){
+  .app{padding:8px 10px 14px;gap:8px}
+  header{gap:6px 10px;align-items:center}
+  header .appicon{width:34px;height:34px;border-radius:9px} header .appicon svg{width:20px;height:20px}
+  .brand{gap:10px} .brand h1{font-size:21px} .brand p{font-size:11.5px;margin-top:1px}
+  .status{margin-left:0;gap:5px;width:100%;flex-wrap:nowrap;overflow:hidden}
+  .chip{font-size:11.5px;padding:4px 9px;gap:5px} .chip i{width:6px;height:6px}
+  .clock{display:none}
+  .legend .lv{font-size:11px} .legend .lv b{font-size:14px} .legend .lv b.pend{font-size:11px}
+  .viewport{height:calc(100svh - 290px)!important;min-height:200px!important}
+  .vtools{top:6px;left:6px;right:6px;gap:5px}
+  .vtools .row{display:none!important}
+  .seg button{padding:4px 9px;font-size:12px}
+  .legend{width:170px!important;padding:6px 9px;font-size:10.5px;right:6px;bottom:6px;border-radius:10px}
+  .legend .sc{font-size:10px}
+  .lbl{font-size:10px;padding:3px 7px} .lbl b{font-size:10.5px}
+  .p-asi{padding:4px 12px!important;padding-top:4px!important;gap:10px!important;flex-direction:row!important;align-items:center;justify-content:flex-start!important}
+  .p-asi .eyebrow{position:static!important}
+  #asi{width:72px!important;max-width:72px;margin-left:auto;margin-right:auto;align-self:center}
+  .instruments .panel{border-radius:16px}
+  .p-kpi{padding:8px 10px!important;gap:6px!important}
+  .p-kpi>.eyebrow{display:none}
+  .kpis{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:5px}
+  .kpi{padding:4px 6px;border-radius:10px}
+  .brand p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .brand{width:100%}
+  .kpi .k{font-size:9.5px;letter-spacing:-.02em}
+  .kpi .v{font-size:15px!important}
+  .kpi .pend{font-size:10.5px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="appicon" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M3 8h11a3 3 0 1 0-3-3"/><path d="M3 12h15a3 3 0 1 1-3 3"/><path d="M3 16h7"/></svg></div>
+      <div>
+        <h1>Túnel de Viento</h1>
+        <p>Laboratorio de Aeronáutica · E.E.S.T. N°7 “TRQ/IMPA”</p>
+      </div>
+    </div>
+    <div class="status">
+      <span class="chip" id="cLink"><i></i>Conectando…</span>
+      <span class="chip" id="cRun"><i></i>Motor: sin dato</span>
+      <span class="chip ok" id="cAlm"><i></i>Sin alarmas</span>
+      <span class="clock" id="clock">--:--:--</span>
+    </div>
+  </header>
+
+  <main>
+    <nav class="panel sections" id="nav" aria-label="Partes del túnel"><div class="eyebrow">Partes del túnel</div></nav>
+
+    <section class="panel viewport" id="vp" aria-label="Modelo 3D del túnel">
+      <canvas id="scene"></canvas>
+      <div id="labels"></div>
+      <div class="vtools">
+        <div class="seg" id="views">
+          <button data-v="iso" class="on">Isométrica</button><button data-v="top">Superior</button><button data-v="side">Lateral</button><button data-v="ts">Ensayo</button>
+        </div>
+        <div class="row" style="pointer-events:none">
+          <div class="seg" id="mode"><button data-m="flow" class="on">Flujo</button><button data-m="solid">Sólido</button></div>
+          <div class="seg"><button id="tLbl" class="on">Etiquetas</button><button id="tPts" class="on">Partículas</button></div>
+        </div>
+      </div>
+      <div class="banner glass" id="banner" hidden></div>
+      <div class="legend glass" id="legend"><div class="lt">Velocidad local · continuidad</div><div class="bar"></div><div class="sc"><span>0</span><span>20</span><span>40</span><span>65 m/s</span></div></div>
+      <div class="hint glass">Tocá una parte para ver su ficha · arrastrá para girar · pellizcá para zoom</div>
+    </section>
+
+    <aside class="panel detail p-det" id="detail" aria-live="polite"></aside>
+  </main>
+
+  <section class="instruments">
+    <div class="panel p-asi">
+      <div class="eyebrow">Velocidad · Pitot</div>
+      <canvas id="asi" width="420" height="420" aria-label="Indicador de velocidad"></canvas>
+    </div>
+    <div class="panel p-kpi">
+      <div class="eyebrow">Lecturas</div>
+      <div class="kpis">
+        <div class="kpi"><div class="k">T ambiente · °C</div><div class="v" id="kTa">–</div></div>
+        <div class="kpi"><div class="k">Presión · hPa</div><div class="v" id="kPa">–</div></div>
+        <div class="kpi"><div class="k">Velocidad · m/s</div><div class="v" id="kV">–</div></div>
+        <div class="kpi"><div class="k">T interna · °C</div><div class="v" id="kT">–</div></div>
+        <div class="kpi"><div class="k">ρ · kg/m³</div><div class="v" id="kRho">–</div></div>
+        <div class="kpi"><div class="k">T motor · °C</div><div class="v" id="kTm">–</div></div>
+        <div class="kpi"><div class="k">Vibración · g</div><div class="v" id="kVib">–</div></div>
+        <div class="kpi"><div class="k">Fuerza celda · N</div><div class="v" id="kF">–</div></div>
+        <div class="kpi"><div class="k">q · Pa</div><div class="v" id="kQ">–</div></div>
+        <div class="kpi"><div class="k">Mach</div><div class="v" id="kM">–</div></div>
+        <div class="kpi"><div class="k">Reynolds</div><div class="v" id="kRe">–</div></div>
+        <div class="kpi"><div class="k">Corrida actual</div><div class="v" id="kRun">–</div></div>
+      </div>
+    </div>
+    <div class="panel p-chart">
+      <div class="eyebrow">Últimos 2 minutos</div>
+      <canvas id="chart"></canvas>
+      <div class="chart-leg"><span id="legV"><i style="background:var(--accent)"></i>Velocidad (m/s)</span><span><i style="background:var(--temp)"></i>T interna (°C)</span><span><i style="background:var(--bad)"></i>T motor (°C)</span><span id="legF"><i style="background:#AF52DE"></i>Fuerza (N)</span></div>
+    </div>
+  </section>
+  <footer class="foot">Datos en vivo del túnel · E.E.S.T. N°7 · Quilmes · <a href="admin.html" style="color:inherit">Mantenimiento</a></footer>
+</div>
+
+<script src="config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>window.THREE||document.write('<script src="three.min.js"><\/script>')</script>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=(v,d=1)=>Number(v).toLocaleString('es-AR',{minimumFractionDigits:d,maximumFractionDigits:d});
+
+// ===== Geometría según planos (m) — circuito horizontal =====
+const W_BIG=1.65, W_TS=0.75, LEN=14.2, DZ=2.02, YC=1.1;
+const X={v1:1.65, rem:3.05, pan:3.83, con:6.21, ts:7.84, dif:11.74, v2:LEN-1.65};
+const ZR=-DZ, CR=(W_BIG/W_TS)**2, CHORD=0.15;
+const ALFA_MONTAJE=0;   // ángulo fijo con el que está montado el perfil (°). Cambiarlo si lo montan inclinado.
+const octR=W=>W/2/Math.cos(Math.PI/8);
+function wTest(x){
+  if(x<X.pan) return W_BIG;
+  if(x<X.con){const t=(x-X.pan)/(X.con-X.pan),s=t*t*(3-2*t);return W_BIG+(W_TS-W_BIG)*s;}
+  if(x<X.ts) return W_TS;
+  if(x<X.dif){const t=(x-X.ts)/(X.dif-X.ts);return W_TS+(W_BIG-W_TS)*t;}
+  return W_BIG;
+}
+
+// ===== Escena =====
+const canvas=$('scene'), vp=$('vp');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(42,1,0.05,200);
+scene.add(new THREE.HemisphereLight(0xdfeaff,0x2a3038,0.85));
+const sun=new THREE.DirectionalLight(0xffffff,0.75); sun.position.set(6,12,9); scene.add(sun);
+const fill=new THREE.DirectionalLight(0xffffff,0.25); fill.position.set(-8,5,-10); scene.add(fill);
+let grid=null;
+
+const M={
+  flow:new THREE.MeshPhongMaterial({vertexColors:true,transparent:true,opacity:0.3,side:THREE.DoubleSide,depthWrite:false,shininess:40,flatShading:true}),
+  sheet:new THREE.MeshPhongMaterial({color:0xeef0f2,side:THREE.DoubleSide,shininess:30,specular:0x222222,flatShading:true}),
+  glass:new THREE.MeshPhongMaterial({color:0x7fb7cc,transparent:true,opacity:0.18,side:THREE.DoubleSide,depthWrite:false,shininess:100}),
+  metal:new THREE.MeshPhongMaterial({color:0x9ba7b3,shininess:60}),
+  steel:new THREE.MeshPhongMaterial({color:0x56616d,shininess:30}),
+  blade:new THREE.MeshPhongMaterial({color:0x1f56d8,shininess:70,specular:0x334466,side:THREE.DoubleSide}),
+  nac:new THREE.MeshPhongMaterial({color:0xf3f4f6,shininess:90,specular:0x555555,side:THREE.DoubleSide}),
+  seam:new THREE.MeshPhongMaterial({color:0x2a2d33,shininess:20}),
+  vane:new THREE.MeshPhongMaterial({color:0x30343b,shininess:40,specular:0x444444,side:THREE.DoubleSide}),
+  wing:new THREE.MeshPhongMaterial({color:0xf0a74a,shininess:60}),
+  cab:new THREE.MeshPhongMaterial({color:0x7d8894,shininess:30}),
+  screen:new THREE.MeshBasicMaterial({color:0x4cc3e0}),
+  door:new THREE.MeshPhongMaterial({color:0x4cc3e0,transparent:true,opacity:0.35,side:THREE.DoubleSide,depthWrite:false}),
+  edge:new THREE.LineBasicMaterial({color:0x9db1c6,transparent:true,opacity:0.28}),
+  honey:new THREE.LineBasicMaterial({color:0xd29922,transparent:true,opacity:0.4}),
+};
+const pickables=[];
+let mode='flow';
+
+const vRet=()=>D.Vt/CR;
+const vTest=x=>D.Vt*(W_TS/wTest(x))**2;
+function sectionAtX(x){ if(x<X.pan) return 'remanso'; if(x<X.con) return 'contraccion'; if(x<X.ts) return 'ensayo'; return 'difusor'; }
+
+// Conducto ÚNICO: una sección octogonal barrida por todo el circuito, con codos a inglete (como los paneles reales)
+const duct=(function(){
+  const up=new THREE.Vector3(0,1,0), XA=W_BIG/2, XB=LEN-W_BIG/2;
+  const corners=[[XA,ZR],[XA,0],[XB,0],[XB,ZR]];             // A, B, C, D  (flujo A→B→C→D→A)
+  const kinds=['ret','test','ret','ret'];
+  const st=[];
+  for(let sgm=0;sgm<4;sgm++){
+    const a=corners[sgm], b=corners[(sgm+1)%4], prev=corners[(sgm+3)%4];
+    const tIn=new THREE.Vector3(a[0]-prev[0],0,a[1]-prev[1]).normalize(), tOut=new THREE.Vector3(b[0]-a[0],0,b[1]-a[1]).normalize();
+    st.push({p:new THREE.Vector3(a[0],YC,a[1]),t:tIn.clone().add(tOut).normalize(),miter:true,w:W_BIG,kind:'ret',x:a[0]});
+    const len=Math.hypot(b[0]-a[0],b[1]-a[1]), n=Math.max(4,Math.round(len/(kinds[sgm]==='test'?0.05:0.25)));
+    for(let i=1;i<n;i++){const f=i/n, x=a[0]+(b[0]-a[0])*f, z=a[1]+(b[1]-a[1])*f;
+      st.push({p:new THREE.Vector3(x,YC,z),t:tOut,miter:false,w:kinds[sgm]==='test'?wTest(x):W_BIG,kind:kinds[sgm]==='test'&&x>X.v1&&x<X.v2?'test':'ret',x});}
+  }
+  const N=st.length, pos=new Float32Array(N*8*3), idx0=[], idx1=[];
+  st.forEach((S0,i)=>{
+    const side=new THREE.Vector3().crossVectors(S0.t,up).normalize(), r=octR(S0.w), sc=S0.miter?Math.SQRT2:1;
+    for(let k=0;k<8;k++){const f=Math.PI/8+k*Math.PI/4;
+      const v=S0.p.clone().addScaledVector(side,r*Math.cos(f)*sc).addScaledVector(up,r*Math.sin(f));
+      pos.set([v.x,v.y,v.z],(i*8+k)*3);}
+  });
+  for(let i=0;i<N;i++){const j=(i+1)%N, glass=st[i].kind==='test'&&st[j].kind==='test'&&st[i].x>=X.con-0.001&&st[j].x<=X.ts+0.001;
+    for(let k=0;k<8;k++){const a=i*8+k,b=i*8+(k+1)%8,c=j*8+k,d=j*8+(k+1)%8; (glass?idx1:idx0).push(a,c,b,b,c,d);}}
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(N*8*3),3));
+  g.setIndex([...idx0,...idx1]); g.addGroup(0,idx0.length,0); g.addGroup(idx0.length,idx1.length,1); g.computeVertexNormals();
+  const m=new THREE.Mesh(g,[M.flow,M.flow]); m.userData={section:'duct',stations:st}; scene.add(m); pickables.push(m);
+  scene.add(new THREE.LineSegments(new THREE.EdgesGeometry(g,35),M.edge));
+  return m;
+})();
+
+// Soportes
+function stand(x,zc,W){
+  const bottom=YC-W/2, hw=W/2*0.62;
+  [-1,1].forEach(s=>{
+    const leg=new THREE.Mesh(new THREE.BoxGeometry(0.06,bottom,0.06),M.steel); leg.position.set(x,bottom/2,zc+s*hw); scene.add(leg);
+    const foot=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.012,0.16),M.steel); foot.position.set(x,0.006,zc+s*hw); scene.add(foot);
+  });
+  const saddle=new THREE.Mesh(new THREE.BoxGeometry(0.07,0.06,hw*2+0.12),M.steel); saddle.position.set(x,bottom-0.03,zc); scene.add(saddle);
+  const brace=new THREE.Mesh(new THREE.BoxGeometry(0.04,0.04,hw*2),M.steel); brace.position.set(x,0.18,zc); scene.add(brace);
+}
+[2.35,3.45,4.7,6.55,7.45,9.0,10.6,12.1].forEach(x=>stand(x,0,wTest(x)));
+[2.4,4.4,6.4,10.2,12.0].forEach(x=>stand(x,ZR,W_BIG));
+[W_BIG/2,LEN-W_BIG/2].forEach(x=>{stand(x,0.15,W_BIG);stand(x,ZR-0.15,W_BIG);});
+
+// Panal de abeja (hexágonos) en ambas caras
+(function(){
+  const pts=[],R=octR(W_BIG)*0.88,s=0.07,h=s*Math.sqrt(3)/2;
+  const hex=(cy,cz,xx)=>{for(let k=0;k<6;k++){const a=k*Math.PI/3,b=(k+1)*Math.PI/3;
+    pts.push(new THREE.Vector3(xx,cy+s/2*Math.sin(a),cz+s/2*Math.cos(a)),new THREE.Vector3(xx,cy+s/2*Math.sin(b),cz+s/2*Math.cos(b)));}};
+  for(const xx of [X.rem+0.01,X.pan-0.01])
+    for(let i=-14;i<=14;i++)for(let j=-14;j<=14;j++){const zz=i*s*0.75, yy=j*h+(Math.abs(i)%2?h/2:0);
+      if(Math.hypot(zz,yy)<R*0.92)hex(YC+yy,zz,xx);}
+  scene.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts),M.honey));
+  // mallas
+  const mp=[],r=octR(W_BIG)*0.9;
+  for(const xx of [X.v1+0.5,X.v1+0.9])for(let a=-r;a<=r;a+=0.05){const hh=Math.sqrt(Math.max(0,r*r-a*a));
+    mp.push(new THREE.Vector3(xx,YC+a,-hh),new THREE.Vector3(xx,YC+a,hh),new THREE.Vector3(xx,YC-hh,a),new THREE.Vector3(xx,YC+hh,a));}
+  scene.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(mp),new THREE.LineBasicMaterial({color:0x8b97a8,transparent:true,opacity:0.18})));
+})();
+
+// Deflectores curvos (chapa oscura) en los 4 codos
+(function(){
+  const XA=W_BIG/2, XB=LEN-W_BIG/2, H=W_BIG*0.8, r=0.26, NS=14;
+  const C=[{c:[XA,0],din:[0,1],dout:[1,0]},{c:[XB,0],din:[1,0],dout:[0,-1]},{c:[XB,ZR],din:[0,-1],dout:[-1,0]},{c:[XA,ZR],din:[-1,0],dout:[0,1]}];
+  C.forEach(({c,din,dout})=>{
+    const u=[-dout[0],-dout[1]], v=din, diag=[(u[0]+v[0])/Math.SQRT2,(u[1]+v[1])/Math.SQRT2];
+    for(let k=-2;k<=2;k++){
+      const px=c[0]+diag[0]*k*0.27, pz=c[1]+diag[1]*k*0.27, ox=px-r*(u[0]+v[0])/2, oz=pz-r*(u[1]+v[1])/2;
+      const P=[], I=[];
+      for(let i=0;i<=NS;i++){const a=i/NS*Math.PI/2, x=ox+r*(u[0]*Math.cos(a)+v[0]*Math.sin(a)), z=oz+r*(u[1]*Math.cos(a)+v[1]*Math.sin(a));
+        P.push(x,YC-H/2,z, x,YC+H/2,z); if(i){const b=(i-1)*2; I.push(b,b+1,b+2,b+1,b+3,b+2);}}
+      const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(P,3)); g.setIndex(I); g.computeVertexNormals();
+      const m=new THREE.Mesh(g,M.vane); m.userData={section:'codos'}; scene.add(m); pickables.push(m);
+    }
+  });
+})();
+
+// Ventilador (como en las fotos): góndola blanca con nariz ojival, carenado vertical y 6 palas azules en la cola
+const fan=new THREE.Group(); fan.position.set(8.2,YC,ZR); scene.add(fan);
+(function(){
+  const R=0.33, pts=[];
+  for(let i=0;i<=40;i++){const y=0.95-i*(0.72/40), s=(0.95-y)/0.72; pts.push(new THREE.Vector2(R*Math.pow(Math.sin(s*Math.PI/2),0.7)+0.0005,y));}
+  pts.push(new THREE.Vector2(R,-0.55));
+  for(let i=1;i<=10;i++){const t=i/10; pts.push(new THREE.Vector2(R-(R-0.21)*t*t,-0.55-t*0.36));}
+  const g=new THREE.LatheGeometry(pts,56); g.rotateZ(-Math.PI/2);
+  const nac=new THREE.Mesh(g,M.nac);
+  const seams=[0.23,-0.25].map(x=>{const t=new THREE.Mesh(new THREE.TorusGeometry(R+0.002,0.006,8,72),M.seam); t.rotation.y=Math.PI/2; t.position.x=x; return t;});
+  const pyl=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.52,0.045),M.nac); pyl.position.set(-0.1,-0.57,0);
+  const pyl2=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.3,0.035),M.nac); pyl2.position.set(0.25,-0.62,0.18); pyl2.rotation.x=0.5;
+  const pyl3=pyl2.clone(); pyl3.position.z=-0.18; pyl3.rotation.x=-0.5;
+  const hub=new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.2,0.12,40),M.metal); hub.rotation.z=Math.PI/2; hub.position.x=-0.98;
+  const cap=new THREE.Mesh(new THREE.ConeGeometry(0.2,0.14,40),M.metal); cap.rotation.z=Math.PI/2; cap.position.x=-1.11;
+  [nac,...seams,pyl,pyl2,pyl3,hub,cap].forEach(m=>{m.userData={section:'motor'};fan.add(m);pickables.push(m);});
+})();
+const rotor=new THREE.Group(); rotor.position.x=-0.98; fan.add(rotor);
+for(let i=0;i<6;i++){const a=i*Math.PI/3;
+  const sh=new THREE.Shape(); sh.moveTo(-0.07,0); sh.lineTo(0.07,0); sh.lineTo(0.065,0.6); sh.quadraticCurveTo(0,0.63,-0.065,0.6); sh.lineTo(-0.07,0);
+  const bg=new THREE.ExtrudeGeometry(sh,{depth:0.014,bevelEnabled:false}); bg.translate(0,0.2,-0.007); bg.rotateY(Math.PI/2);
+  const b=new THREE.Mesh(bg,M.blade); const holder=new THREE.Group(); holder.rotation.x=-a; b.rotation.y=0.55; holder.add(b);
+  b.userData={section:'motor'}; pickables.push(b); rotor.add(holder);}
+
+// Tablero del variador
+(function(){
+  const g=new THREE.Group(); g.position.set(LEN-1.4,0,W_BIG/2+0.65); scene.add(g);
+  const box=new THREE.Mesh(new THREE.BoxGeometry(0.6,1.5,0.4),M.cab); box.position.y=0.75;
+  const scr=new THREE.Mesh(new THREE.PlaneGeometry(0.16,0.09),M.screen); scr.position.set(0,1.15,0.201);
+  const hand=new THREE.Mesh(new THREE.BoxGeometry(0.03,0.18,0.03),M.steel); hand.position.set(0.22,0.8,0.215);
+  [box,scr,hand].forEach(m=>{m.userData={section:'motor'};g.add(m);pickables.push(m);});
+})();
+
+// Sección de ensayo: plato giratorio, ala vertical, Pitot, puerta
+const floorY=YC-W_TS/2;
+const wing=new THREE.Group(); wing.position.set(7.0,YC,0); scene.add(wing);   // perfil horizontal, envergadura transversal
+(function(){
+  const sh=new THREE.Shape(),N=32,yt=x=>0.6*CHORD*(0.2969*Math.sqrt(x)-0.126*x-0.3516*x*x+0.2843*x**3-0.1015*x**4);
+  for(let i=0;i<=N;i++){const x=1-i/N,px=x*CHORD-CHORD/4; i?sh.lineTo(px,yt(x)):sh.moveTo(px,yt(x));}
+  for(let i=1;i<=N;i++){const x=i/N; sh.lineTo(x*CHORD-CHORD/4,-yt(x));}
+  const g=new THREE.ExtrudeGeometry(sh,{depth:0.5,bevelEnabled:false}); g.translate(0,0,-0.25);
+  const m=new THREE.Mesh(g,M.wing); m.userData={section:'ensayo'}; wing.add(m); pickables.push(m);
+  const post=new THREE.Mesh(new THREE.CylinderGeometry(0.012,0.012,W_TS/2,12),M.steel); post.position.y=-W_TS/4; wing.add(post);
+})();
+wing.rotation.z=-ALFA_MONTAJE*Math.PI/180;
+
+// Hilos de lana sobre el extradós: 4 filas en la cuerda × 5 en la envergadura
+const TUFT={list:[],N:6,L:0.035,geo:null,xsep:2,k:0};
+(function(){
+  const yt=x=>0.6*CHORD*(0.2969*Math.sqrt(x)-0.126*x-0.3516*x*x+0.2843*x**3-0.1015*x**4);
+  [0.15,0.4,0.65,0.85].forEach(xc=>[-0.18,-0.09,0,0.09,0.18].forEach(z=>{
+    const s=(yt(xc+0.002)-yt(xc-0.002))/(0.004*CHORD);
+    TUFT.list.push({xc,root:new THREE.Vector3(xc*CHORD-CHORD/4,yt(xc)+0.0025,z),slope:s,rest:Math.random()*Math.PI*2,ph:Math.random()*6.283,ph2:Math.random()*6.283});
+  }));
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(TUFT.list.length*TUFT.N*2*3),3));
+  TUFT.geo=g; const ln=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0xff3b30})); ln.frustumCulled=false; wing.add(ln);
+})();
+const _p=new THREE.Vector3(), _q=new THREE.Vector3(), _d=new THREE.Vector3(), _r=new THREE.Vector3(), _f=new THREE.Vector3();
+function updateTufts(t){
+  // k: cuánto domina el arrastre del aire sobre el peso del hilo (0 = cuelga, 1 = alineado con el flujo)
+  const q=D.qA||0, k=q/(q+12); TUFT.k=k;
+  // punto de desprendimiento sobre el extradós (fracción de cuerda): avanza con el ángulo y con Reynolds bajo
+  const Re=D.reA||0, lowRe=Math.min(Math.max((1.5e5-Re)/1.5e5,0),1);
+  const xsep=1.1-0.07*ALFA_MONTAJE-0.35*lowRe; TUFT.xsep=xsep;
+  const pos=TUFT.geo.attributes.position; let i=0;
+  for(const f of TUFT.list){
+    const sep=f.xc>xsep&&k>0.05;
+    let yaw,pitch;
+    if(sep){ yaw=Math.PI*0.8+1.1*Math.sin(t*7+f.ph)+0.7*Math.sin(t*13.7+f.ph2); pitch=0.3+0.35*Math.abs(Math.sin(t*9+f.ph)); }
+    else { const a=(0.04+0.14*(1-k))*(0.6+0.4*Math.sin(t*3+f.ph2)); yaw=a*Math.sin(t*(8+8*k)+f.ph); pitch=0; }
+    _f.set(Math.cos(yaw)*Math.cos(pitch),Math.sin(pitch)+f.slope*Math.cos(yaw),Math.sin(yaw)*Math.cos(pitch));
+    _r.set(Math.cos(f.rest),0,Math.sin(f.rest));
+    _d.copy(_f).multiplyScalar(k).addScaledVector(_r,1-k).normalize();
+    _p.copy(f.root);
+    for(let j=0;j<TUFT.N;j++){
+      const w=(j+1)/TUFT.N, wave=(sep?0.6:0.3*k)*w*Math.sin(t*(sep?18:13)-j*0.9+f.ph);
+      _q.set(_d.x*Math.cos(wave)-_d.z*Math.sin(wave),_d.y,_d.x*Math.sin(wave)+_d.z*Math.cos(wave));
+      if(!sep&&_q.y<f.slope*_q.x)_q.y=f.slope*_q.x;
+      _q.normalize().multiplyScalar(TUFT.L/TUFT.N).add(_p);
+      pos.setXYZ(i++,_p.x,_p.y,_p.z); pos.setXYZ(i++,_q.x,_q.y,_q.z); _p.copy(_q);
+    }
+  }
+  pos.needsUpdate=true;
+}
+function tuftState(){
+  if(TUFT.k<0.05) return 'sin flujo (cuelgan)';
+  if(TUFT.xsep<0.85) return 'desprendido desde '+fmt(TUFT.xsep*100,0)+' % c';
+  return 'adherido';
+}
+(function(){
+  const p=new THREE.Mesh(new THREE.CylinderGeometry(0.007,0.007,0.17,12),M.metal); p.rotation.z=Math.PI/2; p.position.set(6.46,YC+0.2,0.16); scene.add(p);
+  const s=new THREE.Mesh(new THREE.CylinderGeometry(0.006,0.006,0.18,10),M.metal); s.position.set(6.54,YC+0.285,0.16); scene.add(s);
+})();
+const doorPivot=new THREE.Group(); doorPivot.position.set(7.03,YC+0.155,W_TS/2+0.004); scene.add(doorPivot);
+const door=new THREE.Mesh(new THREE.PlaneGeometry(1.25,0.31),M.door); door.position.y=-0.155; door.userData={section:'ensayo'}; doorPivot.add(door); pickables.push(door);
+
+// Gabinete ESP32
+(function(){
+  const g=new THREE.Group(); g.position.set(LEN-2.15,0,W_BIG/2+0.65); scene.add(g);
+  const post=new THREE.Mesh(new THREE.BoxGeometry(0.05,1.2,0.05),M.steel); post.position.y=0.6;
+  const box=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.22,0.1),M.cab); box.position.y=1.31;
+  const led=new THREE.Mesh(new THREE.PlaneGeometry(0.03,0.03),new THREE.MeshBasicMaterial({color:0x3fbf73})); led.position.set(0.1,1.36,0.051);
+  const ant=new THREE.Mesh(new THREE.CylinderGeometry(0.006,0.006,0.16,8),M.steel); ant.position.set(-0.11,1.5,0);
+  [post,box,led,ant].forEach(m=>{m.userData={section:'electronica'};g.add(m);pickables.push(m);});
+})();
+
+// ===== Partículas =====
+const PATH=[{a:[W_BIG/2,ZR],b:[W_BIG/2,0],ax:'z'},{a:[W_BIG/2,0],b:[LEN-W_BIG/2,0],ax:'x',test:true},{a:[LEN-W_BIG/2,0],b:[LEN-W_BIG/2,ZR],ax:'z'},{a:[LEN-W_BIG/2,ZR],b:[W_BIG/2,ZR],ax:'x'}];
+PATH.forEach(s=>s.len=Math.hypot(s.b[0]-s.a[0],s.b[1]-s.a[1]));
+const LOOP=PATH.reduce((t,s)=>t+s.len,0), NP=800;
+const pS=new Float32Array(NP),pU=new Float32Array(NP),pV=new Float32Array(NP);
+for(let i=0;i<NP;i++){pS[i]=Math.random()*LOOP;const r=Math.sqrt(Math.random())*0.85,a=Math.random()*6.283;pU[i]=r*Math.cos(a);pV[i]=r*Math.sin(a);}
+const pGeo=new THREE.BufferGeometry();
+pGeo.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(NP*3),3));
+pGeo.setAttribute('color',new THREE.Float32BufferAttribute(new Float32Array(NP*3),3));
+const points=new THREE.Points(pGeo,new THREE.PointsMaterial({size:0.045,vertexColors:true,transparent:true,opacity:0.9,depthWrite:false}));
+scene.add(points);
+
+const STOPS=[0x2b5cff,0x00c2ff,0x2bd96b,0xffd23f,0xff4d3d].map(c=>new THREE.Color(c)), tmpC=new THREE.Color();
+function cmap(v,out){let t=Math.min(Math.max(v/65,0),1)*(STOPS.length-1);const i=Math.min(Math.floor(t),STOPS.length-2);return out.copy(STOPS[i]).lerp(STOPS[i+1],t-i);}
+function recolor(){
+  if(mode!=='flow')return;
+  const col=duct.geometry.attributes.color, st=duct.userData.stations;
+  st.forEach((S0,i)=>{cmap(S0.kind==='test'?vTest(S0.x):vRet(),tmpC); for(let k=0;k<8;k++)col.setXYZ(i*8+k,tmpC.r,tmpC.g,tmpC.b);});
+  col.needsUpdate=true;
+}
+function setMode(m){
+  mode=m; duct.material=m==='flow'?[M.flow,M.flow]:[M.sheet,M.glass];
+  $('legend').hidden=m!=='flow'; recolor();
+  document.querySelectorAll('#mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+}
+
+// ===== Datos en vivo =====
+// De dónde salen los datos:
+//   · Firebase (público, con el QR): completar FIREBASE_URL con la dirección de la Realtime Database.
+//   · ESP32 directo (prueba en el taller): abrir la página con ?esp=192.168.4.1 (o la IP que tenga el ESP32).
+//   · Demostración sin hardware: abrir la página con ?demo
+// Formato del paquete (el mismo que devuelve /datos en tunel_completo.ino "18-11 d"):
+//   { t, ts, a:{ok,t,p}, u:{ok,t,p}, rho, m:{ok,vib,inc}, d:{ok,t}, s:{ok,dp,v,t} (Pitot SDP810),
+//     h:{ok,c,g} (celda HX711, g = gramos), marcha, det, rssi }
+//   ts = hora de Firebase en ms (epoch).
+const FIREBASE_URL=((window.TUNEL_CONFIG||{}).FIREBASE_URL||'').trim();   // se completa en config.js
+const RUTA_VIVO='/tunel/vivo';
+// Curva medida el 13-11-2026 (Pitot + SDP810): V ≈ 1,07 · f − 0,64  (m/s, f en Hz).
+// Se usa al revés para estimar la frecuencia del variador y las rpm a partir de la velocidad medida.
+const CURVA_K=1.07, CURVA_B=-0.64;
+const VIB_MARCHA=0.03;              // g RMS: por encima de esto se considera que el motor está en marcha (a calibrar)
+const VIB_ALARMA=0.30;              // g RMS: alarma de vibración (a calibrar)
+const TMOT_ALARMA=75;               // °C: alarma de temperatura del motor
+const V_ILUSTRATIVA=15;             // m/s: velocidad SOLO para animar el 3D mientras no haya medición
+const VENCIDO_MS=15000;             // sin datos nuevos durante este tiempo = sin conexión
+
+const QS=new URLSearchParams(location.search);
+const FUENTE=QS.has('demo')?'demo':QS.get('esp')?'esp':FIREBASE_URL?'firebase':'ninguna';
+const S={hist:[],lastH:0,raw:null,rxAt:0,run0:null,link:'conectando',err:''};
+let D={Vt:0,alarms:[]};
+const nn=v=>(v===null||v===undefined||Number.isNaN(+v))?null:+v;
+
+// ---- lectura ----
+async function leer(){
+  try{
+    let j;
+    if(FUENTE==='demo') j=demo();
+    else if(FUENTE==='esp'){ const r=await fetch(`http://${QS.get('esp')}/datos`,{cache:'no-store'}); j=await r.json(); j.ts=j.ts||Date.now(); }
+    else if(FUENTE==='firebase'){ const r=await fetch(`${FIREBASE_URL.replace(/\/$/,'')}${RUTA_VIVO}.json`,{cache:'no-store'}); j=await r.json(); }
+    else { S.link='sinconfig'; return; }
+    if(!j){ S.link='sindatos'; return; }
+    const viejo=j.ts&&Date.now()-j.ts>VENCIDO_MS;
+    if(!S.raw||j.t!==S.raw.t||j.ts!==S.raw.ts) S.rxAt=Date.now();
+    S.raw=j; S.link=viejo?'apagado':'vivo'; S.err='';
+  }catch(e){ S.link='error'; S.err=String(e.message||e); }
+}
+const PERIODO=FUENTE==='firebase'?2000:1000;
+leer(); setInterval(leer,PERIODO);
+
+// ---- demo (mismo formato que el ESP32) ----
+const DM={t:0,on:false,tin:21,tm:24,next:8};
+function demo(){
+  DM.t++; if(DM.t>=DM.next){DM.on=!DM.on;DM.next=DM.t+(DM.on?60:20);}
+  DM.tin+=((DM.on?27:21)-DM.tin)/90; DM.tm+=((DM.on?48:24)-DM.tm)/120;
+  const r=()=>Math.random()-0.5;
+  return {t:DM.t,ts:Date.now(),a:{ok:true,t:21.4+r()*0.1,p:1012.6+r()*0.2,h:58+r()},u:{ok:true,t:DM.tin+r()*0.05,p:1012.9+r()*0.2},
+    m:{ok:true,vib:DM.on?0.09+Math.random()*0.03:0.004+Math.random()*0.003,inc:1.2},d:{ok:true,t:DM.tm},
+    s:(()=>{DM.v=(DM.v||0)+((DM.on?13.2:0)-(DM.v||0))/6;const v=Math.max(0,DM.v+r()*0.2);return {ok:true,v,dp:0.5*1.19*v*v,t:24};})(),
+    h:{ok:true,c:0,g:Math.max(0,(DM.v||0)**2*1.6+r()*8)},marcha:DM.on,det:'pitot',rssi:-61};
+}
+
+// ---- cálculos (cada cuadro) ----
+function step(dt,now){
+  const vivo=S.link==='vivo';
+  const j=vivo?(S.raw||{}):{}, a=j.a||{}, u=j.u||{}, m=j.m||{}, d=j.d||{}, sp=j.s||{}, hc=j.h||{};   // apagado = sin números viejos
+  const Tamb=a.ok?nn(a.t):null, P=a.ok?nn(a.p):null, RH=a.ok?nn(a.h):null;
+  const Tin=u.ok?nn(u.t):null, Pin=u.ok?nn(u.p):null;
+  const Tmot=d.ok?nn(d.t):null, vib=m.ok?nn(m.vib):null;
+  const Vp=sp.ok?nn(sp.v):null, dp=sp.ok?nn(sp.dp):null;            // Pitot + SDP810
+  const kg=hc.ok&&nn(hc.g)!=null?nn(hc.g)/1000:null, F=kg==null?null:kg*9.80665;   // celda de carga
+  const hz=Vp!=null&&Vp>0.5?(Vp-CURVA_B)/CURVA_K:(Vp!=null?0:null);  // estimada con la curva
+  const marcha=!vivo?null:(typeof j.marcha==='boolean'?j.marcha:(Vp!=null?Vp>2:(vib==null?null:vib>VIB_MARCHA)));
+  const Tk=(Tin??Tamb)==null?null:(Tin??Tamb)+273.15;
+  const Pa=(Pin??P)==null?null:(Pin??P)*100;
+  // densidad: la manda el ESP32 o se calcula con presión y temperatura interna
+  const rho=nn(j.rho)??((Tk&&Pa)?Pa/(287.05*Tk):null);
+  const V=Vp;
+  const mu=Tk?1.716e-5*(Tk/273.15)**1.5*(273.15+110.4)/(Tk+110.4):null;
+  const q=dp!=null?Math.max(dp,0):((V!=null&&rho)?0.5*rho*V*V:null);
+  const mach=(V!=null&&Tk)?V/Math.sqrt(1.4*287.05*Tk):null;
+  const re=(V!=null&&rho&&mu)?rho*V*CHORD/mu:null;
+  const rpm=hz!=null?hz*29.6:null;
+  // velocidad que usa SOLO la animación 3D
+  const Vobj=V!=null?V:(marcha?V_ILUSTRATIVA:0);
+  // arranque y frenado suaves (unos segundos), como el motor real
+  S.va=(S.va||0)+(Vobj-(S.va||0))*Math.min(1,dt/2.5); if(Math.abs(S.va-Vobj)<0.05)S.va=Vobj;
+  const Va=S.va;
+  const rhoA=rho||1.2, qA=0.5*rhoA*Va*Va, reA=rhoA*Va*CHORD/1.8e-5;
+  if(marcha&&!S.run0)S.run0=now; if(!marcha)S.run0=null;
+  const alarms=[];
+  if(vivo&&vib!=null&&vib>VIB_ALARMA)alarms.push('Vibración alta en el motor');
+  if(vivo&&Tmot!=null&&Tmot>TMOT_ALARMA)alarms.push('Temperatura del motor elevada');
+  if(vivo&&j.falla===true)alarms.push('Falla del variador');
+  if(F!=null){S.fmax=S.fmax==null?F:Math.max(S.fmax,F);}
+  D={vivo,Tamb,P,RH,T:Tin,Pin,Tmot,vib,hz,marcha,rho,V,q,mach,re,rpm,kg,F,Fmax:S.fmax,
+     Vt:Va,qA,reA,rpmA:rpm!=null?rpm:Va/1.24*29.6,ilustrativo:V==null&&Va>0.5,
+     Vret:V!=null?V/CR:null,dprec:q!=null?0.85*q*(1-1/(CR*CR)):null,alarms,
+     run:S.run0?(now-S.run0)/1000:null,rssi:nn(j.rssi),sens:{a:!!a.ok,u:!!u.ok,m:!!m.ok,d:!!d.ok,s:!!sp.ok,h:!!hc.ok},raw:j};
+  if(now-S.lastH>1000){S.lastH=now;
+    if(vivo)S.hist.push([Date.now(),V,Tin,Tmot,F]);
+    while(S.hist.length&&Date.now()-S.hist[0][0]>120000)S.hist.shift();}
+}
+
+// ===== Fichas por parte =====
+const PEND='<span class="pend">pendiente</span>';
+const v_=(v,d,u)=>v==null?'–':fmt(v,d)+(u?' '+u:'');      // dato que debería estar y no llegó
+const p_=(v,d,u)=>v==null?'–':fmt(v,d)+(u?' '+u:'');      // dato calculado (sin dato = –)
+const SEC={
+  ensayo:{t:'Sección de ensayo',a:new THREE.Vector3(7.0,YC+0.72,0),
+    d:'Zona de máxima velocidad donde se monta el modelo, fijo sobre su soporte, con ángulo de ataque fijo. Sección octogonal de 0,75 m y 1,63 m de largo, con ventanas y puerta lateral. Al principio de la sección, antes del modelo, un tubo Pitot impreso en 3D con toma estática de pared mide la presión dinámica con un Sensirion SDP810; la velocidad sale de v = √(2·Δp/ρ). Debajo del modelo, una celda de carga con HX711 mide la fuerza. Los hilos de lana del modelo 3D son ilustrativos.',
+    rows:()=>[['Velocidad','Pitot · SDP810',v_(D.V,1,'m/s')],['Presión dinámica q','SDP810 · medida',v_(D.q,1,'Pa')],['Fuerza en la celda','HX711 · celda de carga',D.F==null?'–':fmt(D.F,2)+' N ('+fmt(D.kg,3)+' kg)'],['Fuerza máxima','desde que se abrió la página',v_(D.Fmax,2,'N')],['Número de Mach','calculado',p_(D.mach,3)],['Reynolds','cuerda 0,15 m',D.re==null?'–':Math.round(D.re).toLocaleString('es-AR')],['Temperatura del aire','BMP280 · inicio del difusor',v_(D.T,1,'°C')]],
+    short:()=>D.V==null?'–':fmt(D.V)+' m/s', lbl:()=>D.V==null?`T ${v_(D.T,1,'°C')}`:`V ${fmt(D.V)} m/s · F ${v_(D.F,1,'N')}`},
+  contraccion:{t:'Contracción',a:new THREE.Vector3(5.0,YC+0.95,0),
+    d:`Reduce el área para acelerar el flujo: relación de contracción ${fmt(CR,2)}. No lleva sensores; las velocidades salen de la ecuación de continuidad.`,
+    rows:()=>[['Velocidad de entrada','continuidad',p_(D.Vret,1,'m/s')],['Velocidad de salida','continuidad',p_(D.V,1,'m/s')],['Relación de contracción','plano',fmt(CR,2)],['Largo','plano','2,38 m']],
+    short:()=>'× '+fmt(CR,1), lbl:()=>`Contracción × ${fmt(CR,1)}`},
+  remanso:{t:'Cámara de remanso',a:new THREE.Vector3(2.5,YC+1.15,0),
+    d:'Las mallas y el panal de abeja enderezan el flujo y bajan la turbulencia antes de la contracción. Es la zona de aire más lento del circuito de ensayo.',
+    rows:()=>[['Velocidad local','continuidad',p_(D.Vret,1,'m/s')],['Panal','plano','0,78 m de profundidad']],
+    short:()=>D.Vret==null?'–':fmt(D.Vret)+' m/s', lbl:()=>D.Vret==null?'Mallas y panal':`V ${fmt(D.Vret)} m/s`},
+  difusor:{t:'Difusor',a:new THREE.Vector3(9.8,YC+1.0,0),
+    d:'Desacelera el flujo de forma gradual para recuperar presión y bajar la potencia que necesita el ventilador. Al comienzo, en la pared, está el BMP280 que mide la temperatura y la presión del aire de adentro.',
+    rows:()=>[['Temperatura interna','BMP280',v_(D.T,1,'°C')],['Presión interna','BMP280',v_(D.Pin,1,'hPa')],['Densidad del aire','calculada',v_(D.rho,3,'kg/m³')],['Velocidad de salida','continuidad',p_(D.Vret,1,'m/s')],['Presión recuperada','estimada, η 85 %',p_(D.dprec,0,'Pa')],['Largo','plano','3,90 m']],
+    short:()=>v_(D.T,1,'°C'), lbl:()=>`T int ${v_(D.T,1,'°C')} · ρ ${v_(D.rho,3)}`},
+  codos:{t:'Codos y deflectores',a:new THREE.Vector3(LEN-W_BIG/2,YC+1.15,ZR/2),
+    d:'Cuatro codos de 90° a inglete, con deflectores curvos de chapa que giran el flujo con pocas pérdidas y sin que se despegue de las paredes.',
+    rows:()=>[['Velocidad local','continuidad',p_(D.Vret,1,'m/s')],['Sección','plano','1,65 m'],['Álabes por codo','plano','5']],
+    short:()=>'4 × 90°', lbl:()=>'4 codos · 5 álabes'},
+  retorno:{t:'Conducto de retorno',a:new THREE.Vector3(4.2,YC+1.1,ZR),
+    d:'Devuelve el aire al circuito. Tiene la sección más grande, así que es la zona más lenta y con menos pérdidas.',
+    rows:()=>[['Velocidad local','continuidad',p_(D.Vret,1,'m/s')],['Sección','plano','1,65 m']],
+    short:()=>D.Vret==null?'–':fmt(D.Vret)+' m/s', lbl:()=>'Retorno · 1,65 m'},
+  motor:{t:'Motor y ventilador',a:new THREE.Vector3(8.2,YC+1.1,ZR),
+    d:'Motor Corradi de 35 CV en una góndola carenada, con hélice de 6 palas, comandado por un variador Yaskawa VS-616P5 limitado al 25 % (unos 12,5 Hz). El DS18B20 mide la temperatura de la carcasa y el MPU6050 la vibración en la base. La marcha se detecta con la velocidad del Pitot (más de 2 m/s). La frecuencia se estima con la curva medida el 13-11: V ≈ 1,07 · f − 0,64.',
+    rows:()=>[['Estado',D.raw.det==='pitot'?'por velocidad del Pitot':D.raw.det==='rele'?'relé M1–M2':'por vibración',D.marcha==null?'–':D.marcha?'en marcha':'detenido'],['Temperatura del motor','DS18B20',v_(D.Tmot,1,'°C'),D.Tmot!=null&&D.Tmot>TMOT_ALARMA],['Vibración','MPU6050 · RMS',v_(D.vib,3,'g'),D.vib!=null&&D.vib>VIB_ALARMA],['Frecuencia','estimada con la curva',p_(D.hz,1,'Hz')],['Velocidad de giro','estimada · 29,6 × f',p_(D.rpm,0,'rpm')],['Variador','Yaskawa VS-616P5','limitado al 25 %']],
+    short:()=>v_(D.Tmot,1,'°C'), lbl:()=>`${v_(D.Tmot,1,'°C')} · vib ${v_(D.vib,2,'g')}`, alarm:()=>D.alarms.length>0},
+  exterior:{t:'Aire del laboratorio',a:new THREE.Vector3(-0.6,YC+1.5,1.2),
+    d:'Condiciones del aire fuera del túnel, medidas con el BMP280 del gabinete. Sirven para comparar con el aire de adentro, que se calienta con el uso.',
+    rows:()=>[['Temperatura','BMP280',v_(D.Tamb,1,'°C')],['Presión atmosférica','BMP280',v_(D.P,1,'hPa')],['Densidad del aire','calculada',(D.Tamb!=null&&D.P!=null)?fmt(D.P*100/(287.05*(D.Tamb+273.15)),3)+' kg/m³':'–']],
+    short:()=>v_(D.Tamb,1,'°C'), lbl:()=>`${v_(D.Tamb,1,'°C')} · ${v_(D.P,0,'hPa')}`},
+  electronica:{t:'Adquisición de datos',a:new THREE.Vector3(LEN-2.15,1.62,W_BIG/2+0.65),
+    d:'ESP32 en el gabinete al lado del variador. Lee 6 sensores: dos buses I2C (D21/D22 y D5/D15), 1-Wire en D4 y el HX711 en D19/D18. Se conecta al WiFi del colegio y cada 2 s sube los datos a Firebase, donde también queda guardado el historial.',
+    rows:()=>{const ok=b=>!D.vivo?'–':b?'OK':'NO RESPONDE';return [['Estado','ESP32',LINK_TXT[S.link]],['Última lectura','',S.rxAt?hace(S.rxAt):'–'],...(D.rssi!=null?[['Señal WiFi','RSSI',D.rssi+' dBm']]:[]),
+      ['SDP810 · Pitot','I2C 0x25 · D21/D22',ok(D.sens.s),D.vivo&&!D.sens.s],['BMP280 · aire exterior','I2C 0x76 · D21/D22',ok(D.sens.a),D.vivo&&!D.sens.a],['BMP280 · aire interior','I2C 0x76 · D5/D15',ok(D.sens.u),D.vivo&&!D.sens.u],['MPU6050 · vibración','I2C 0x68 · D21/D22',ok(D.sens.m),D.vivo&&!D.sens.m],['DS18B20 · motor','1-Wire · D4',ok(D.sens.d),D.vivo&&!D.sens.d],
+      ['HX711 · celda de carga','D19 / D18',ok(D.sens.h),D.vivo&&!D.sens.h],['Relés del variador','marcha y falla',PEND]];},
+    short:()=>D.vivo?SENS6().filter(Boolean).length+'/6 OK':'–', lbl:()=>`ESP32 · ${LINK_TXT[S.link]}`,
+    alarm:()=>D.vivo&&SENS6().some(b=>!b)},
+};
+const SENS6=()=>[D.sens.s,D.sens.a,D.sens.u,D.sens.m,D.sens.d,D.sens.h];
+const LINK_TXT={conectando:'conectando…',vivo:'en línea',apagado:'sin datos nuevos',sindatos:'sin datos',error:'sin conexión',sinconfig:'sin configurar'};
+function hace(t){const s=Math.max(0,Math.round((Date.now()-t)/1000));return s<60?`hace ${s} s`:s<3600?`hace ${Math.round(s/60)} min`:new Date(t).toLocaleString('es-AR');}
+
+// Navegación lateral y etiquetas
+const ORDER=['ensayo','contraccion','remanso','difusor','motor','retorno','codos','electronica','exterior'];
+const ICON={
+  ensayo:['#007AFF','<path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" fill="#fff" stroke="none"/>'],
+  contraccion:['#30B0C7','<path d="M3 5h18l-7 8v6l-4 2v-8z"/>'],
+  remanso:['#FF9500','<path d="M14 14.8V4.5a2 2 0 0 0-4 0v10.3a4 4 0 1 0 4 0z"/>'],
+  difusor:['#5856D6','<path d="M3 12h6M9 12l6-6h6M9 12l6 6h6"/>'],
+  motor:['#FF2D55','<circle cx="12" cy="12" r="2"/><path d="M12 10c-1-4 0-7 3-7s2 5-3 7M14 12c4-1 7 0 7 3s-5 2-7-3M12 14c1 4 0 7-3 7s-2-5 3-7M10 12c-4 1-7 0-7-3s5-2 7 3"/>'],
+  retorno:['#34C759','<path d="M4 12a8 8 0 0 1 14-5.3M20 3v4h-4M20 12a8 8 0 0 1-14 5.3M4 21v-4h4"/>'],
+  codos:['#8E8E93','<path d="M5 20V10a5 5 0 0 1 5-5h9M15 1l4 4-4 4"/>'],
+  electronica:['#32ADE6','<rect x="7" y="7" width="10" height="10" rx="1.5"/><path d="M10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4"/>'],
+  exterior:['#FFCC00','<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'],
+};
+const nav=$('nav'), labelsEl=$('labels'); let selected='ensayo', showLabels=true;
+for(const k in SEC){
+  const ic=ICON[k]||['#8E8E93',''];
+  const b=document.createElement('button'); b.className='sec'; b.innerHTML=`<span class="ic" style="background:${ic[0]}"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ic[1]}</svg><span class="dot"></span></span><span class="nm">${SEC[k].t}</span><span class="vl num"></span><svg class="chev" viewBox="0 0 8 13"><path d="M1.5 1.5 6.5 6.5 1.5 11.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  b.onclick=()=>{select(k);focusOn(k);}; nav.appendChild(b); SEC[k].nav=b;
+  const l=document.createElement('div'); l.className='lbl'; l.onclick=()=>select(k); labelsEl.appendChild(l); SEC[k].el=l;
+}
+function select(k){selected=k;for(const s in SEC){SEC[s].nav.classList.toggle('active',s===k);SEC[s].el.classList.toggle('sel',s===k);}renderDetail(true);}
+function renderDetail(full){
+  const s=SEC[selected], el=$('detail');
+  if(full||!el.dataset.k||el.dataset.k!==selected){
+    el.dataset.k=selected;
+    el.innerHTML=`<div class="eyebrow">Ficha técnica</div><h2>${s.t}</h2><p>${s.d}</p><table class="spec"><tbody id="specBody"></tbody></table><div class="row"><button class="btn" id="dz">Acercar cámara</button></div>`;
+    $('dz').onclick=()=>focusOn(selected);
+  }
+  $('specBody').innerHTML=s.rows().map(r=>`<tr><td>${r[0]}<small>${r[1]}</small></td><td class="v${r[3]?' bad':''}">${r[2]}</td></tr>`).join('');
+}
+
+// ===== Cámara =====
+const target=new THREE.Vector3(LEN/2,0.9,ZR/2), sph={r:15,th:0.42,ph:1.0};
+const VIEWS={iso:{t:[LEN/2,0.9,ZR/2],r:15,th:0.42,ph:1.0},top:{t:[LEN/2,0.9,ZR/2],r:17,th:0,ph:0.06},side:{t:[LEN/2,1.0,ZR/2],r:15.5,th:0,ph:1.42},ts:{t:[7.0,YC,0],r:2.6,th:0.35,ph:1.25}};
+let anim=null;
+function fitR(r){const a=vp.clientWidth/Math.max(1,vp.clientHeight);return a<1.25?Math.min(r*1.25/a,42):r;}
+function goView(v){const o=VIEWS[v];animateTo(new THREE.Vector3(...o.t),fitR(o.r),o.th,o.ph);document.querySelectorAll('#views button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));}
+function focusOn(k){const a=SEC[k].a;animateTo(new THREE.Vector3(a.x,Math.min(a.y-0.6,YC),a.z),fitR(k==='ensayo'?3.6:6),sph.th,Math.min(sph.ph,1.2));document.querySelectorAll('#views button').forEach(b=>b.classList.remove('on'));}
+function animateTo(t,r,th,ph){
+  let dth=th-sph.th; dth=Math.atan2(Math.sin(dth),Math.cos(dth));
+  anim={f:target.clone(),t,r0:sph.r,r1:r,th0:sph.th,th1:sph.th+dth,ph0:sph.ph,ph1:ph,k:0};
+}
+function updCam(){camera.position.set(target.x+sph.r*Math.sin(sph.ph)*Math.sin(sph.th),target.y+sph.r*Math.cos(sph.ph),target.z+sph.r*Math.sin(sph.ph)*Math.cos(sph.th));camera.lookAt(target);}
+const ptr=new Map(); let moved=0,pinch0=0;
+canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);ptr.set(e.pointerId,{x:e.clientX,y:e.clientY,b:e.button});moved=0;anim=null;if(ptr.size===2){const [a,b]=[...ptr.values()];pinch0=Math.hypot(a.x-b.x,a.y-b.y);}});
+canvas.addEventListener('pointermove',e=>{
+  const p=ptr.get(e.pointerId); if(!p)return; const dx=e.clientX-p.x,dy=e.clientY-p.y; moved+=Math.abs(dx)+Math.abs(dy);
+  if(ptr.size===1){ if(p.b===2||e.shiftKey)pan(dx,dy); else {sph.th-=dx*0.006;sph.ph=Math.min(Math.max(sph.ph-dy*0.006,0.05),1.55);} }
+  else if(ptr.size===2){p.x=e.clientX;p.y=e.clientY;const [a,b]=[...ptr.values()],d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch0)sph.r=Math.min(Math.max(sph.r*pinch0/d,1.5),45);pinch0=d;pan(dx/2,dy/2);return;}
+  p.x=e.clientX;p.y=e.clientY;
+});
+function pan(dx,dy){const s=sph.r*0.0012,r=new THREE.Vector3().setFromMatrixColumn(camera.matrix,0),u=new THREE.Vector3().setFromMatrixColumn(camera.matrix,1);target.addScaledVector(r,-dx*s).addScaledVector(u,dy*s);}
+canvas.addEventListener('pointerup',e=>{const n=ptr.size;ptr.delete(e.pointerId);if(ptr.size<2)pinch0=0;if(n===1&&moved<6)pick(e);});
+canvas.addEventListener('pointercancel',e=>{ptr.delete(e.pointerId);pinch0=0;});
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+canvas.addEventListener('wheel',e=>{e.preventDefault();anim=null;sph.r=Math.min(Math.max(sph.r*Math.exp(e.deltaY*0.001),1.5),45);},{passive:false});
+const ray=new THREE.Raycaster();
+function pick(e){
+  const r=canvas.getBoundingClientRect(); ray.setFromCamera({x:(e.clientX-r.left)/r.width*2-1,y:-(e.clientY-r.top)/r.height*2+1},camera);
+  const hits=ray.intersectObjects(pickables,false); if(!hits.length)return;
+  const sec=h=>{ if(h.object!==duct) return h.object.userData.section;
+    const lp=world.worldToLocal(h.point.clone());
+    if(lp.x>W_BIG&&lp.x<LEN-W_BIG) return Math.abs(lp.z)<1.0?sectionAtX(lp.x):'retorno';
+    return 'codos'; };
+  const solid=hits.find(h=>h.object!==duct); const first=sec(hits[0]);
+  select(solid&&(mode==='flow'||first==='ensayo')?sec(solid):first);
+}
+
+// ===== Controles =====
+document.querySelectorAll('#views button').forEach(b=>b.onclick=()=>goView(b.dataset.v));
+document.querySelectorAll('#mode button').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+$('tLbl').onclick=()=>{showLabels=!showLabels;labelsEl.hidden=!showLabels;$('tLbl').classList.toggle('on',showLabels);};
+$('tPts').onclick=()=>{points.visible=!points.visible;$('tPts').classList.toggle('on',points.visible);};
+
+// ===== Tema =====
+let TC={};
+function applyTheme(){
+  TC={bg:css('--scene-bg'),grid:css('--scene-grid'),edge:css('--scene-edge'),metal:css('--metal'),steel:css('--steel'),glass:css('--glass'),fg:css('--fg'),muted:css('--muted'),line:css('--line'),accent:css('--accent'),temp:css('--temp'),ok:css('--ok'),warn:css('--warn'),bad:css('--bad'),surface:css('--surface'),fill:css('--fill')};
+  scene.background=new THREE.Color(TC.bg);
+  if(grid){scene.remove(grid);grid.geometry.dispose();}
+  grid=new THREE.GridHelper(34,34,new THREE.Color(TC.grid),new THREE.Color(TC.grid)); grid.position.set(LEN/2,0,ZR/2); scene.add(grid);
+  M.edge.color.set(TC.edge); M.metal.color.set(TC.metal); M.steel.color.set(TC.steel); M.glass.color.set(TC.glass); M.screen.color.set(TC.accent);
+  drawASI(); drawChart();
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',applyTheme);
+new MutationObserver(applyTheme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+// ===== Instrumentos =====
+const asi=$('asi'), ax=asi.getContext('2d');
+const ROUND='ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, system-ui, sans-serif';
+function hexA(h,a){h=h.trim();if(h[0]!=='#')return h;const n=parseInt(h.slice(1,7),16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;}
+function drawASI(){
+  const W=asi.width, c=W/2, R=W*0.37, lw=W*0.085, has=D.V!=null, v=D.V||0; ax.clearRect(0,0,W,W);
+  const a0=0.75*Math.PI, sw=1.5*Math.PI, ang=x=>a0+Math.min(Math.max(x,0),70)/70*sw;
+  ax.lineCap='round'; ax.lineWidth=lw; ax.strokeStyle=TC.fill; ax.beginPath(); ax.arc(c,c,R,a0,a0+sw); ax.stroke();
+  if(has&&v>0.3){const g=ax.createLinearGradient(c-R,c+R,c+R,c-R); g.addColorStop(0,'#5AC8FA'); g.addColorStop(0.55,TC.accent); g.addColorStop(1,'#5E5CE6');
+    ax.strokeStyle=g; ax.beginPath(); ax.arc(c,c,R,a0,ang(v)); ax.stroke();
+    const e=ang(v); ax.fillStyle='#ffffff'; ax.beginPath(); ax.arc(c+Math.cos(e)*R,c+Math.sin(e)*R,lw*0.22,0,6.283); ax.fill();}
+  ax.textAlign='center'; ax.textBaseline='middle'; ax.fillStyle=TC.muted; ax.font=`600 ${W*0.042}px ${ROUND}`;
+  for(const x of [0,10,20,30,40,50,60,70]){const t=ang(x); ax.fillText(x,c+Math.cos(t)*(R-lw*1.3),c+Math.sin(t)*(R-lw*1.3));}
+  ax.fillStyle=has?TC.fg:TC.muted; ax.font=`700 ${W*0.17}px ${ROUND}`; ax.fillText(has?fmt(v):'–',c,c-W*0.015);
+  ax.fillStyle=TC.muted; ax.font=`600 ${W*0.05}px ${ROUND}`; ax.fillText('m/s',c,c+W*0.095);
+  ax.font=`600 ${W*0.044}px ${ROUND}`; ax.fillText(has?`${fmt(v*3.6,0)} km/h · ${fmt(v*1.94384,0)} kt`:'sin dato del Pitot',c,c+W*0.31);
+}
+const ch=$('chart'), cx=ch.getContext('2d');
+function drawChart(){
+  const dpr=Math.min(devicePixelRatio,2), w=ch.clientWidth, h=ch.clientHeight; if(!w)return;
+  if(ch.width!==Math.round(w*dpr)){ch.width=Math.round(w*dpr);ch.height=Math.round(h*dpr);}
+  cx.setTransform(dpr,0,0,dpr,0,0); cx.clearRect(0,0,w,h);
+  const L=34,Rr=40,T=8,B=20,pw=w-L-Rr,ph=h-T-B, MAX=80, hasV=S.hist.some(p=>p[1]!=null); $('legV').hidden=!hasV;
+  cx.font=`600 11px ${ROUND}`; cx.textBaseline='middle';
+  [0,20,40,60,80].forEach(v=>{const y=T+ph-(v/MAX)*ph; cx.strokeStyle=TC.line; cx.lineWidth=1; cx.setLineDash(v?[3,4]:[]); cx.beginPath(); cx.moveTo(L,y); cx.lineTo(L+pw,y); cx.stroke(); cx.setLineDash([]);
+    cx.fillStyle=TC.muted; cx.textAlign='right'; cx.fillText(v+' °C',L-5,y); if(hasV){cx.textAlign='left'; cx.fillText(v+' m/s',L+pw+5,y);}});
+  cx.textAlign='left'; cx.textBaseline='alphabetic'; cx.fillStyle=TC.muted; cx.fillText('−2 min',L,h-4); cx.textAlign='right'; cx.fillText('ahora',L+pw,h-4);
+  const now=Date.now(), X0=t=>L+pw-(now-t)/120000*pw, Y=v=>T+ph-Math.min(Math.max(v,0),MAX)/MAX*ph;
+  if(!S.hist.length){cx.textAlign='center'; cx.textBaseline='middle'; cx.fillText(D.vivo?'Juntando datos…':'Sin datos en vivo',L+pw/2,T+ph/2); return;}
+  const line=(idx,col,fill)=>{const pts=S.hist.filter(p=>p[idx]!=null); if(pts.length<2)return;
+    if(fill){const grad=cx.createLinearGradient(0,T,0,T+ph); grad.addColorStop(0,hexA(col,0.32)); grad.addColorStop(1,hexA(col,0));
+      cx.beginPath(); pts.forEach((p,i)=>{i?cx.lineTo(X0(p[0]),Y(p[idx])):cx.moveTo(X0(p[0]),Y(p[idx]));}); cx.lineTo(X0(pts[pts.length-1][0]),T+ph); cx.lineTo(X0(pts[0][0]),T+ph); cx.closePath(); cx.fillStyle=grad; cx.fill();}
+    cx.strokeStyle=col;cx.lineWidth=2.5;cx.lineJoin='round';cx.lineCap='round';cx.beginPath();pts.forEach((p,i)=>{i?cx.lineTo(X0(p[0]),Y(p[idx])):cx.moveTo(X0(p[0]),Y(p[idx]));});cx.stroke();
+    const l=pts[pts.length-1], yl=Y(l[idx]); cx.fillStyle=TC.surface; cx.beginPath(); cx.arc(X0(l[0]),yl,5.5,0,6.283); cx.fill(); cx.fillStyle=col; cx.beginPath(); cx.arc(X0(l[0]),yl,3.5,0,6.283); cx.fill();};
+  line(1,TC.accent,true); line(3,TC.bad,false); line(2,TC.temp,false); line(4,'#AF52DE',false);
+  $('legF').hidden=!S.hist.some(p=>p[4]!=null);
+}
+
+function chip(el,ok,tOk,tBad){el.className='chip '+(ok?'ok':'bad');el.innerHTML='<i></i>'+(ok?tOk:tBad);}
+function kpi(id,v,d,pend){const el=$(id); if(v==null){el.innerHTML=pend?'<span class="pend">pendiente</span>':'–';} else el.textContent=fmt(v,d);}
+function updateUI(){
+  const L=$('cLink'), st=S.link;
+  L.className='chip '+(st==='vivo'?(FUENTE==='demo'?'sim':'ok'):st==='conectando'?'':'bad');
+  L.innerHTML='<i></i>'+(st==='vivo'?(FUENTE==='demo'?'Demostración':'En vivo'):st==='apagado'?'Túnel apagado':st==='conectando'?'Conectando…':'Sin conexión');
+  $('cRun').className='chip '+(D.marcha?'ok':''); $('cRun').innerHTML='<i></i>'+(D.marcha==null?'Motor: sin dato':D.marcha?'Motor en marcha':'Motor detenido');
+  chip($('cAlm'),!D.alarms.length,'Sin alarmas',D.alarms.length+(D.alarms.length>1?' alarmas':' alarma'));
+  const msgs=[...D.alarms];
+  if(st==='sinconfig')msgs.push('Falta configurar Firebase: completar FIREBASE_URL en config.js');
+  else if(st==='error'&&FUENTE==='esp')msgs.push(`No responde el ESP32 en ${QS.get('esp')}`);
+  $('banner').hidden=!msgs.length; $('banner').textContent=msgs.join(' · ');
+  kpi('kTa',D.Tamb,1); kpi('kPa',D.P,0); kpi('kV',D.V,1); kpi('kT',D.T,1); kpi('kRho',D.rho,3); kpi('kTm',D.Tmot,1); kpi('kVib',D.vib,3);
+  kpi('kF',D.F,2); kpi('kQ',D.q,1); kpi('kM',D.mach,3);
+  if(D.re==null)kpi('kRe',null,0); else $('kRe').textContent=fmt(D.re/1000,0)+' k';
+  $('kVib').parentNode.classList.toggle('bad',D.vib!=null&&D.vib>VIB_ALARMA); $('kTm').parentNode.classList.toggle('bad',D.Tmot!=null&&D.Tmot>TMOT_ALARMA);
+  $('kRun').textContent=D.run==null?'–':String(Math.floor(D.run/60)).padStart(2,'0')+':'+String(Math.floor(D.run%60)).padStart(2,'0');
+  $('legend').firstChild.innerHTML=D.V!=null?`<span class="lv">Velocidad en el ensayo <b>${fmt(D.V)} m/s</b></span>Velocidad local · continuidad`:`<span class="lv">Velocidad en el ensayo <b class="pend">sin dato</b></span>${D.ilustrativo?'Flujo ilustrativo · el Pitot no responde':'Velocidad local · continuidad'}`;
+  for(const k in SEC){const s=SEC[k],al=!!(s.alarm&&s.alarm());
+    s.el.innerHTML=`<b>${s.t}</b><span>${s.lbl()}</span>`; s.el.classList.toggle('alarm',al);
+    s.nav.querySelector('.vl').textContent=s.short(); s.nav.querySelector('.dot').classList.toggle('bad',al);}
+  renderDetail(false); recolor();
+  drawASI(); drawChart();
+  $('clock').textContent=new Date().toLocaleTimeString('es-AR');
+}
+
+// ===== Sentido del flujo: horario visto desde arriba (modelo espejado en X) =====
+const world=new THREE.Group(); world.scale.x=-1; world.position.x=LEN;
+scene.children.slice().forEach(o=>{ if(!o.isLight) world.add(o); }); scene.add(world);
+for(const k in SEC){ SEC[k].a.x=LEN-SEC[k].a.x; }
+VIEWS.ts.t[0]=LEN-VIEWS.ts.t[0];
+
+// ===== Bucle =====
+function resize(){const w=vp.clientWidth,h=vp.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/Math.max(1,h);camera.updateProjectionMatrix();drawChart();}
+new ResizeObserver(resize).observe(vp); addEventListener('resize',resize);
+const v3=new THREE.Vector3(); let last=performance.now(), lastUI=0;
+step(0.016,last); applyTheme(); resize(); sph.r=fitR(15); select('ensayo'); updateUI();
+function frame(now){
+  const dt=Math.min((now-last)/1000,0.1); last=now; step(dt,now);
+  if(anim){anim.k=Math.min(anim.k+dt*1.5,1);const e=anim.k*anim.k*(3-2*anim.k);target.lerpVectors(anim.f,anim.t,e);sph.r=anim.r0+(anim.r1-anim.r0)*e;sph.th=anim.th0+(anim.th1-anim.th0)*e;sph.ph=anim.ph0+(anim.ph1-anim.ph0)*e;if(anim.k>=1)anim=null;}
+  updCam();
+  rotor.rotation.x-=D.rpmA/60*6.283*dt*0.2;
+  updateTufts(now/1000);
+    if(points.visible){
+    const pos=pGeo.attributes.position,col=pGeo.attributes.color;
+    for(let i=0;i<NP;i++){
+      let s=pS[i],k=0; while(s>PATH[k].len&&k<3){s-=PATH[k].len;k++;}
+      const g=PATH[k],f=s/g.len,x=g.a[0]+(g.b[0]-g.a[0])*f,z=g.a[1]+(g.b[1]-g.a[1])*f;
+      const test=g.test&&x>X.v1&&x<X.v2, v=test?vTest(x):vRet(), hw=(test?wTest(x):W_BIG)/2;
+      if(g.ax==='x')pos.setXYZ(i,x,YC+pU[i]*hw,z+pV[i]*hw); else pos.setXYZ(i,x+pV[i]*hw,YC+pU[i]*hw,z);
+      cmap(v,tmpC); col.setXYZ(i,0.35+0.65*tmpC.r,0.35+0.65*tmpC.g,0.35+0.65*tmpC.b);
+      pS[i]=(pS[i]+Math.max(v,0)*0.06*dt)%LOOP;
+    }
+    pos.needsUpdate=true; col.needsUpdate=true;
+  }
+  if(now-lastUI>200){lastUI=now;updateUI();}
+  renderer.render(scene,camera);
+  if(showLabels){const W=vp.clientWidth,H=vp.clientHeight,placed=[];
+    for(const k of ORDER){const s=SEC[k];v3.copy(s.a).project(camera);
+      if(v3.z>1||Math.abs(v3.x)>1.05||Math.abs(v3.y)>1.05){s.el.hidden=true;continue;}
+      s.el.hidden=false; const x=(v3.x+1)/2*W; let top=(1-v3.y)/2*H;
+      const w=s.el.offsetWidth,h=s.el.offsetHeight; let r={x0:x-w/2,x1:x+w/2,y0:top-h-6,y1:top-6};
+      for(let n=0;n<6;n++){const hit=placed.find(p=>r.x0<p.x1+4&&r.x1>p.x0-4&&r.y0<p.y1+4&&r.y1>p.y0-4); if(!hit)break;
+        const dy=r.y1-(hit.y0-4); r.y0-=dy; r.y1-=dy; top-=dy;}
+      if(r.y0<52||r.x0<4||r.x1>W-4){s.el.hidden=true;continue;}
+      placed.push(r); s.el.style.left=x+'px'; s.el.style.top=top+'px';}}
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body></html>
