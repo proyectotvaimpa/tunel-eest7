@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name="color-scheme" content="light dark"><meta name="darkreader-lock"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Túnel de Viento EEST N°7</title>
 <style>
 /* Layout: estilo iOS — fondo agrupado, tarjetas blancas redondeadas, barras translúcidas sobre la vista 3D, widgets de instrumentos abajo */
@@ -11,7 +11,7 @@
   --f:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",system-ui,sans-serif;
   --f-round:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
   --f-data:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-  --r:20px; --gap:14px;
+  --r:20px; --gap:14px; color-scheme:light dark;   /* la página maneja su propio modo oscuro: así Android no lo fuerza */
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#000000; --surface:#1C1C1E; --surface-2:#2C2C2E; --fill:rgba(120,120,128,.3); --line:rgba(84,84,88,.5);
@@ -290,7 +290,7 @@ aside.detail{padding:18px;display:flex;flex-direction:column;gap:12px}
         <div class="kpi"><div class="k">ρ · kg/m³</div><div class="v" id="kRho">–</div></div>
         <div class="kpi"><div class="k">T motor · °C</div><div class="v" id="kTm">–</div></div>
         <div class="kpi"><div class="k">Vibración · g</div><div class="v" id="kVib">–</div></div>
-        <div class="kpi"><div class="k">Fuerza celda · N</div><div class="v" id="kF">–</div></div>
+        <div class="kpi"><div class="k">Sustentación · N</div><div class="v" id="kF">–</div></div>
         <div class="kpi"><div class="k">q · Pa</div><div class="v" id="kQ">–</div></div>
         <div class="kpi"><div class="k">Mach</div><div class="v" id="kM">–</div></div>
         <div class="kpi"><div class="k">Reynolds</div><div class="v" id="kRe">–</div></div>
@@ -615,9 +615,13 @@ async function leer(){
     else if(FUENTE==='firebase'){ const r=await fetch(`${FIREBASE_URL.replace(/\/$/,'')}${RUTA_VIVO}.json`,{cache:'no-store'}); j=await r.json(); }
     else { S.link='sinconfig'; return; }
     if(!j){ S.link='sindatos'; return; }
-    const viejo=j.ts&&Date.now()-j.ts>VENCIDO_MS;
-    if(!S.raw||j.t!==S.raw.t||j.ts!==S.raw.ts) S.rxAt=Date.now();
-    S.raw=j; S.link=viejo?'apagado':'vivo'; S.err='';
+    // "apagado" = el dato no cambió en 15 s (se mide con el reloj del propio celular, así no importa si está adelantado o atrasado)
+    const nuevo=!S.raw||j.t!==S.raw.t||j.ts!==S.raw.ts;
+    if(!S.raw){ S.t0=Date.now(); S.rxAt=(!j.ts||Date.now()-j.ts<=VENCIDO_MS)?Date.now():0; }   // primera lectura
+    else if(nuevo) S.rxAt=Date.now();
+    // si la primera lectura parecía vieja, se espera a ver si cambia (unos 5 s) antes de decir "apagado"
+    const viejo=S.rxAt?Date.now()-S.rxAt>VENCIDO_MS:Date.now()-S.t0>5000;
+    S.raw=j; S.link=viejo?'apagado':S.rxAt?'vivo':'conectando'; S.err='';
   }catch(e){ S.link='error'; S.err=String(e.message||e); }
 }
 const PERIODO=FUENTE==='firebase'?2000:1000;
@@ -701,8 +705,8 @@ const v_=(v,d,u)=>v==null?'–':fmt(v,d)+(u?' '+u:'');      // dato que debería
 const p_=(v,d,u)=>v==null?'–':fmt(v,d)+(u?' '+u:'');      // dato calculado (sin dato = –)
 const SEC={
   ensayo:{t:'Sección de ensayo',a:new THREE.Vector3(7.0,YC+0.72,0),
-    d:'Zona de máxima velocidad donde se monta el modelo, fijo sobre su soporte, con ángulo de ataque fijo. Sección octogonal de 0,75 m y 1,63 m de largo, con ventanas y puerta lateral. Al principio de la sección, antes del modelo, un tubo Pitot impreso en 3D con toma estática de pared mide la presión dinámica con un Sensirion SDP810; la velocidad sale de v = √(2·Δp/ρ). Debajo del modelo, una celda de carga con HX711 mide la fuerza de arrastre (en la dirección del viento), y con ella se calcula el coeficiente Cd = F / (q·S). Los hilos de lana del modelo 3D son ilustrativos.',
-    rows:()=>[['Velocidad','Pitot · SDP810',v_(D.V,1,'m/s')],['Presión dinámica q','SDP810 · medida',v_(D.q,1,'Pa')],['Fuerza de arrastre','celda HX711 · en la dirección del viento',D.F==null?'–':fmt(D.F,2)+' N ('+fmt(D.kg,3)+' kg)'],['Fuerza máxima','desde que se abrió la página',v_(D.Fmax,2,'N')],['Coef. de arrastre Cd','F / (q·S) · S = '+fmt(AREA*1e4,1)+' cm²',D.Cf==null?'–':fmt(D.Cf,2)],['Número de Mach','calculado',p_(D.mach,3)],['Reynolds','cuerda '+fmt(CHORD*100,0)+' cm',D.re==null?'–':Math.round(D.re).toLocaleString('es-AR')],['Temperatura del aire','BMP280 · inicio del difusor',v_(D.T,1,'°C')]],
+    d:'Zona de máxima velocidad donde se monta el modelo, fijo sobre su soporte, con ángulo de ataque fijo. Sección octogonal de 0,75 m y 1,63 m de largo, con ventanas y puerta lateral. Al principio de la sección, antes del modelo, un tubo Pitot impreso en 3D con toma estática de pared mide la presión dinámica con un Sensirion SDP810; la velocidad sale de v = √(2·Δp/ρ). Debajo del modelo, una celda de carga con HX711 mide la fuerza vertical, o sea la sustentación del perfil (positiva hacia arriba), y con ella se calcula el coeficiente CL = L / (q·S). Los hilos de lana del modelo 3D son ilustrativos.',
+    rows:()=>[['Velocidad','Pitot · SDP810',v_(D.V,1,'m/s')],['Presión dinámica q','SDP810 · medida',v_(D.q,1,'Pa')],['Sustentación L','celda HX711 · hacia arriba',D.F==null?'–':fmt(D.F,2)+' N ('+fmt(D.kg,3)+' kg)'],['Fuerza máxima','desde que se abrió la página',v_(D.Fmax,2,'N')],['Coef. de sustentación CL','L / (q·S) · S = '+fmt(AREA*1e4,1)+' cm²',D.Cf==null?'–':fmt(D.Cf,2)],['Número de Mach','calculado',p_(D.mach,3)],['Reynolds','cuerda '+fmt(CHORD*100,0)+' cm',D.re==null?'–':Math.round(D.re).toLocaleString('es-AR')],['Temperatura del aire','BMP280 · inicio del difusor',v_(D.T,1,'°C')]],
     short:()=>D.V==null?'–':fmt(D.V)+' m/s', lbl:()=>D.V==null?`T ${v_(D.T,1,'°C')}`:`V ${fmt(D.V)} m/s · F ${v_(D.F,1,'N')}`},
   contraccion:{t:'Contracción',a:new THREE.Vector3(5.0,YC+0.95,0),
     d:`Reduce el área para acelerar el flujo: relación de contracción ${fmt(CR,2)}. No lleva sensores; las velocidades salen de la ecuación de continuidad.`,
@@ -836,7 +840,7 @@ function drawFV(){
   cx.fillStyle=hexA('#AF52DE',0.55);for(const [v,f] of S.fv){cx.beginPath();cx.arc(X(v),Y(f),2.6,0,6.283);cx.fill();}
   const k=ajusteK(); if(k){cx.strokeStyle=TC.accent;cx.lineWidth=2.5;cx.beginPath();for(let v=0;v<=vmax;v+=vmax/60){const y=Y(k*v*v);v?cx.lineTo(X(v),y):cx.moveTo(X(v),y);}cx.stroke();}
   let t='k = '+fmt(k,4)+' N/(m/s)²';
-  if(AREA){const qs=S.fv.filter(p=>p[2]>5);if(qs.length){const c=qs.reduce((a,p)=>a+p[1]/(p[2]*AREA),0)/qs.length;t+=' · Cd medio = '+fmt(c,2);}}
+  if(AREA){const qs=S.fv.filter(p=>p[2]>5);if(qs.length){const c=qs.reduce((a,p)=>a+p[1]/(p[2]*AREA),0)/qs.length;t+=' · CL medio = '+fmt(c,2);}}
   $('fvK').textContent=t;
 }
 $('fvBorrar').onclick=()=>{S.fv=[];drawChart();};
