@@ -267,7 +267,7 @@ aside.detail{padding:18px;display:flex;flex-direction:column;gap:12px}
         </div>
       </div>
       <div class="banner glass" id="banner" hidden></div>
-      <div class="legend glass" id="legend"><div class="lt">Velocidad local · continuidad</div><div class="bar"></div><div class="sc"><span>0</span><span>20</span><span>40</span><span>65 m/s</span></div></div>
+      <div class="legend glass" id="legend"><div class="lt">Velocidad local · continuidad</div><div class="bar"></div><div class="sc"><span>0</span><span>10</span><span>20</span><span>30 m/s</span></div></div>
       <div class="hint glass">Tocá una parte para ver su ficha · arrastrá para girar · pellizcá para zoom</div>
       <div class="qrbox glass solopc" id="expoBox" hidden><em id="expo">👆 Tocá la pantalla para explorar el túnel</em></div>
     </section>
@@ -278,7 +278,7 @@ aside.detail{padding:18px;display:flex;flex-direction:column;gap:12px}
   <section class="instruments">
     <div class="panel p-asi">
       <div class="eyebrow">Velocidad · Pitot</div>
-      <canvas id="asi" width="420" height="420" aria-label="Indicador de velocidad"></canvas>
+      <canvas id="asi" width="420" height="420" aria-label="Indicador de velocidad en km/h"></canvas>
     </div>
     <div class="panel p-kpi">
       <div class="eyebrow">Lecturas</div>
@@ -566,7 +566,8 @@ const points=new THREE.Points(pGeo,new THREE.PointsMaterial({size:0.045,vertexCo
 scene.add(points);
 
 const STOPS=[0x2b5cff,0x00c2ff,0x2bd96b,0xffd23f,0xff4d3d].map(c=>new THREE.Color(c)), tmpC=new THREE.Color();
-function cmap(v,out){let t=Math.min(Math.max(v/65,0),1)*(STOPS.length-1);const i=Math.min(Math.floor(t),STOPS.length-2);return out.copy(STOPS[i]).lerp(STOPS[i+1],t-i);}
+const ESCALA_3D=30;   // m/s del color rojo de las partículas (el túnel al 25 % da unos 13 m/s en el ensayo)
+function cmap(v,out){let t=Math.min(Math.max(v/ESCALA_3D,0),1)*(STOPS.length-1);const i=Math.min(Math.floor(t),STOPS.length-2);return out.copy(STOPS[i]).lerp(STOPS[i+1],t-i);}
 function recolor(){
   if(mode!=='flow')return;
   const col=duct.geometry.attributes.color, st=duct.userData.stations;
@@ -881,18 +882,19 @@ new MutationObserver(applyTheme).observe(document.documentElement,{attributes:tr
 const asi=$('asi'), ax=asi.getContext('2d');
 const ROUND='ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, system-ui, sans-serif';
 function hexA(h,a){h=h.trim();if(h[0]!=='#')return h;const n=parseInt(h.slice(1,7),16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;}
+const VEL_MAX_KMH=100;   // fondo de escala del velocímetro (el túnel al 25 % da unos 46 km/h)
 function drawASI(){
-  const W=asi.width, c=W/2, R=W*0.37, lw=W*0.085, has=D.V!=null, v=D.V||0; ax.clearRect(0,0,W,W);
-  const a0=0.75*Math.PI, sw=1.5*Math.PI, ang=x=>a0+Math.min(Math.max(x,0),70)/70*sw;
+  const W=asi.width, c=W/2, R=W*0.37, lw=W*0.085, has=D.V!=null, v=(D.V||0)*3.6; ax.clearRect(0,0,W,W);   // v en km/h
+  const a0=0.75*Math.PI, sw=1.5*Math.PI, ang=x=>a0+Math.min(Math.max(x,0),VEL_MAX_KMH)/VEL_MAX_KMH*sw;
   ax.lineCap='round'; ax.lineWidth=lw; ax.strokeStyle=TC.fill; ax.beginPath(); ax.arc(c,c,R,a0,a0+sw); ax.stroke();
-  if(has&&v>0.3){const g=ax.createLinearGradient(c-R,c+R,c+R,c-R); g.addColorStop(0,'#5AC8FA'); g.addColorStop(0.55,TC.accent); g.addColorStop(1,'#5E5CE6');
+  if(has&&v>1){const g=ax.createLinearGradient(c-R,c+R,c+R,c-R); g.addColorStop(0,'#5AC8FA'); g.addColorStop(0.55,TC.accent); g.addColorStop(1,'#5E5CE6');
     ax.strokeStyle=g; ax.beginPath(); ax.arc(c,c,R,a0,ang(v)); ax.stroke();
     const e=ang(v); ax.fillStyle='#ffffff'; ax.beginPath(); ax.arc(c+Math.cos(e)*R,c+Math.sin(e)*R,lw*0.22,0,6.283); ax.fill();}
   ax.textAlign='center'; ax.textBaseline='middle'; ax.fillStyle=TC.muted; ax.font=`600 ${W*0.042}px ${ROUND}`;
-  for(const x of [0,10,20,30,40,50,60,70]){const t=ang(x); ax.fillText(x,c+Math.cos(t)*(R-lw*1.3),c+Math.sin(t)*(R-lw*1.3));}
-  ax.fillStyle=has?TC.fg:TC.muted; ax.font=`700 ${W*0.17}px ${ROUND}`; ax.fillText(has?fmt(v):'–',c,c-W*0.015);
-  ax.fillStyle=TC.muted; ax.font=`600 ${W*0.05}px ${ROUND}`; ax.fillText('m/s',c,c+W*0.095);
-  ax.font=`600 ${W*0.044}px ${ROUND}`; ax.fillText(has?`${fmt(v*3.6,0)} km/h · ${fmt(v*1.94384,0)} kt`:'sin dato del Pitot',c,c+W*0.31);
+  for(let x=0;x<=VEL_MAX_KMH;x+=VEL_MAX_KMH/5){const t=ang(x); ax.fillText(x,c+Math.cos(t)*(R-lw*1.3),c+Math.sin(t)*(R-lw*1.3));}
+  ax.fillStyle=has?TC.fg:TC.muted; ax.font=`700 ${W*0.17}px ${ROUND}`; ax.fillText(has?fmt(v,0):'–',c,c-W*0.015);
+  ax.fillStyle=TC.muted; ax.font=`600 ${W*0.05}px ${ROUND}`; ax.fillText('km/h',c,c+W*0.095);
+  ax.font=`600 ${W*0.044}px ${ROUND}`; ax.fillText(has?`${fmt(D.V,1)} m/s · ${fmt(D.V*1.94384,0)} kt`:'sin dato del Pitot',c,c+W*0.31);
 }
 const ch=$('chart'), cx=ch.getContext('2d');
 let modoGraf='t';
