@@ -714,6 +714,8 @@ for(const k in SEC){
   const l=document.createElement('div'); l.className='lbl'; l.onclick=()=>select(k); labelsEl.appendChild(l); SEC[k].el=l;
 }
 function select(k){selected=k;for(const s in SEC){SEC[s].nav.classList.toggle('active',s===k);SEC[s].el.classList.toggle('sel',s===k);}renderDetail(true);}
+// Solo reescribe si cambió (si no, el navegador redibuja cada 0,2 s y titila)
+function setH(el,h){if(el&&el.__h!==h){el.__h=h;el.innerHTML=h;}}
 function renderDetail(full){
   const s=SEC[selected], el=$('detail');
   if(full||!el.dataset.k||el.dataset.k!==selected){
@@ -721,7 +723,7 @@ function renderDetail(full){
     el.innerHTML=`<div class="eyebrow">Ficha técnica</div><h2>${s.t}</h2><p>${s.d}</p><table class="spec"><tbody id="specBody"></tbody></table><div class="row"><button class="btn" id="dz">Acercar cámara</button></div>`;
     $('dz').onclick=()=>focusOn(selected);
   }
-  $('specBody').innerHTML=s.rows().map(r=>`<tr><td>${r[0]}<small>${r[1]}</small></td><td class="v${r[3]?' bad':''}">${r[2]}</td></tr>`).join('');
+  setH($('specBody'),s.rows().map(r=>`<tr><td>${r[0]}<small>${r[1]}</small></td><td class="v${r[3]?' bad':''}">${r[2]}</td></tr>`).join(''));
 }
 
 // ===== Cámara =====
@@ -818,26 +820,26 @@ function drawChart(){
   $('legF').hidden=!S.hist.some(p=>p[4]!=null);
 }
 
-function chip(el,ok,tOk,tBad){el.className='chip '+(ok?'ok':'bad');el.innerHTML='<i></i>'+(ok?tOk:tBad);}
-function kpi(id,v,d,pend){const el=$(id); if(v==null){el.innerHTML=pend?'<span class="pend">pendiente</span>':'–';} else el.textContent=fmt(v,d);}
+function chip(el,ok,tOk,tBad){el.className='chip '+(ok?'ok':'bad');setH(el,'<i></i>'+(ok?tOk:tBad));}
+function kpi(id,v,d,pend){const el=$(id); setH(el,v==null?(pend?'<span class="pend">pendiente</span>':'–'):fmt(v,d));}
 function updateUI(){
   const L=$('cLink'), st=S.link;
   L.className='chip '+(st==='vivo'?(FUENTE==='demo'?'sim':'ok'):st==='conectando'?'':'bad');
-  L.innerHTML='<i></i>'+(st==='vivo'?(FUENTE==='demo'?'Demostración':'En vivo'):st==='apagado'?'Túnel apagado':st==='conectando'?'Conectando…':'Sin conexión');
-  $('cRun').className='chip '+(D.marcha?'ok':''); $('cRun').innerHTML='<i></i>'+(D.marcha==null?'Motor: sin dato':D.marcha?'Motor en marcha':'Motor detenido');
+  setH(L,'<i></i>'+(st==='vivo'?(FUENTE==='demo'?'Demostración':'En vivo'):st==='apagado'?'Túnel apagado':st==='conectando'?'Conectando…':'Sin conexión'));
+  $('cRun').className='chip '+(D.marcha?'ok':''); setH($('cRun'),'<i></i>'+(D.marcha==null?'Motor: sin dato':D.marcha?'Motor en marcha':'Motor detenido'));
   chip($('cAlm'),!D.alarms.length,'Sin alarmas',D.alarms.length+(D.alarms.length>1?' alarmas':' alarma'));
   const msgs=[...D.alarms];
   if(st==='sinconfig')msgs.push('Falta configurar Firebase: completar FIREBASE_URL en config.js');
   else if(st==='error'&&FUENTE==='esp')msgs.push(`No responde el ESP32 en ${QS.get('esp')}`);
-  $('banner').hidden=!msgs.length; $('banner').textContent=msgs.join(' · ');
+  $('banner').hidden=!msgs.length; setH($('banner'),msgs.join(' · '));
   kpi('kTa',D.Tamb,1); kpi('kPa',D.P,0); kpi('kV',D.V,1); kpi('kT',D.T,1); kpi('kRho',D.rho,3); kpi('kTm',D.Tmot,1); kpi('kVib',D.vib,3);
   kpi('kF',D.F,2); kpi('kQ',D.q,1); kpi('kM',D.mach,3);
-  if(D.re==null)kpi('kRe',null,0); else $('kRe').textContent=fmt(D.re/1000,0)+' k';
+  if(D.re==null)kpi('kRe',null,0); else setH($('kRe'),fmt(D.re/1000,0)+' k');
   $('kVib').parentNode.classList.toggle('bad',D.vib!=null&&D.vib>VIB_ALARMA); $('kTm').parentNode.classList.toggle('bad',D.Tmot!=null&&D.Tmot>TMOT_ALARMA);
-  $('kRun').textContent=D.run==null?'–':String(Math.floor(D.run/60)).padStart(2,'0')+':'+String(Math.floor(D.run%60)).padStart(2,'0');
-  $('legend').firstChild.innerHTML=D.V!=null?`<span class="lv">Velocidad en el ensayo <b>${fmt(D.V)} m/s</b></span>Velocidad local · continuidad`:`<span class="lv">Velocidad en el ensayo <b class="pend">sin dato</b></span>${D.ilustrativo?'Flujo ilustrativo · el Pitot no responde':'Velocidad local · continuidad'}`;
+  setH($('kRun'),D.run==null?'–':String(Math.floor(D.run/60)).padStart(2,'0')+':'+String(Math.floor(D.run%60)).padStart(2,'0'));
+  setH($('legend').firstChild,D.V!=null?`<span class="lv">Velocidad en el ensayo <b>${fmt(D.V)} m/s</b></span>Velocidad local · continuidad`:`<span class="lv">Velocidad en el ensayo <b class="pend">sin dato</b></span>${D.ilustrativo?'Flujo ilustrativo · el Pitot no responde':'Velocidad local · continuidad'}`);
   for(const k in SEC){const s=SEC[k],al=!!(s.alarm&&s.alarm());
-    s.el.innerHTML=`<b>${s.t}</b><span>${s.lbl()}</span>`; s.el.classList.toggle('alarm',al);
+    setH(s.el,`<b>${s.t}</b><span>${s.lbl()}</span>`); s.el.classList.toggle('alarm',al);
     s.nav.querySelector('.vl').textContent=s.short(); s.nav.querySelector('.dot').classList.toggle('bad',al);}
   renderDetail(false); recolor();
   drawASI(); drawChart();
