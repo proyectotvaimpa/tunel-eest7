@@ -143,7 +143,8 @@ aside.detail{padding:18px;display:flex;flex-direction:column;gap:12px}
 .kpi .v{font-family:var(--f-round);font-weight:700;font-size:21px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 .kpi .v small{font-size:12px;color:var(--muted);font-weight:600;margin-left:3px}
 #chart{width:100%;height:170px;display:block}
-.chart-leg{display:flex;gap:16px;font-size:12px;color:var(--muted)}
+.chead{display:flex;justify-content:space-between;align-items:center;gap:8px}.chead .seg button{font-size:12px;padding:4px 10px}
+.chart-leg{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--muted)}
 .chart-leg i{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:-1px;margin-right:6px}
 .ctl label{display:flex;justify-content:space-between;font-size:14px}
 .ctl label b{font-family:var(--f-round);font-weight:600;color:var(--accent)}
@@ -220,6 +221,14 @@ aside.detail{padding:18px;display:flex;flex-direction:column;gap:12px}
 .adminbtn:active{opacity:.8}
 @media (max-width:999px){.adminbtn{display:none!important}}   /* el botón Admin solo en PC */
 @media (min-width:1000px) and (max-width:1279px){.kpi .k{font-size:11.5px}.instruments{grid-template-columns:240px minmax(0,1.6fr) minmax(0,1fr)!important}}
+.qrbox{position:absolute;left:12px;bottom:12px;display:flex;align-items:center;gap:10px;padding:8px 12px 8px 8px;border-radius:14px}
+.qrbox img{width:84px;height:84px;border-radius:8px;image-rendering:pixelated;display:block}
+.qrbox b{display:block;font-size:14px}.qrbox span{font-size:12px;color:var(--muted)}
+.qrbox~.hint,.hint{z-index:1}
+@media (max-width:1399px){.hint{display:none!important}}
+.qrbox em{display:block;font-style:normal;font-weight:700;font-size:15px;color:var(--accent);animation:latido 2.4s ease-in-out infinite}
+@keyframes latido{50%{opacity:.55}}
+@media (max-width:999px){.solopc{display:none!important}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -254,11 +263,13 @@ aside.detail{padding:18px;display:flex;flex-direction:column;gap:12px}
         <div class="row" style="pointer-events:none">
           <div class="seg" id="mode"><button data-m="flow" class="on">Flujo</button><button data-m="solid">Sólido</button></div>
           <div class="seg"><button id="tLbl" class="on">Etiquetas</button><button id="tPts" class="on">Partículas</button></div>
+          <div class="seg solopc"><button id="tFull" title="Pantalla completa (Esc para salir)">⛶ Pantalla completa</button></div>
         </div>
       </div>
       <div class="banner glass" id="banner" hidden></div>
       <div class="legend glass" id="legend"><div class="lt">Velocidad local · continuidad</div><div class="bar"></div><div class="sc"><span>0</span><span>20</span><span>40</span><span>65 m/s</span></div></div>
       <div class="hint glass">Tocá una parte para ver su ficha · arrastrá para girar · pellizcá para zoom</div>
+      <div class="qrbox glass solopc" id="expoBox" hidden><em id="expo">👆 Tocá la pantalla para explorar el túnel</em></div>
     </section>
 
     <aside class="panel detail p-det" id="detail" aria-live="polite"></aside>
@@ -287,9 +298,10 @@ aside.detail{padding:18px;display:flex;flex-direction:column;gap:12px}
       </div>
     </div>
     <div class="panel p-chart">
-      <div class="eyebrow">Últimos 2 minutos</div>
+      <div class="chead"><div class="eyebrow" id="cTit">Últimos 2 minutos</div><div class="seg" id="cMode"><button data-c="t" class="on">Tiempo</button><button data-c="fv">F vs. V</button></div></div>
       <canvas id="chart"></canvas>
       <div class="chart-leg"><span id="legV"><i style="background:var(--accent)"></i>Velocidad (m/s)</span><span><i style="background:var(--temp)"></i>T interna (°C)</span><span><i style="background:var(--bad)"></i>T motor (°C)</span><span id="legF"><i style="background:#AF52DE"></i>Fuerza (N)</span></div>
+      <div class="chart-leg" id="legFV" hidden><span><i style="background:#AF52DE"></i>Mediciones</span><span><i style="background:var(--accent)"></i>Ajuste F = k·V²</span><span id="fvK"></span><button class="btn" id="fvBorrar" style="font-size:11px;padding:2px 8px;margin-left:auto">Borrar puntos</button></div>
     </div>
   </section>
   <footer class="foot">Datos en vivo del túnel · E.E.S.T. N°7 · Quilmes · <a href="admin.html" style="color:inherit">Mantenimiento</a></footer>
@@ -308,7 +320,10 @@ const fmt=(v,d=1)=>Number(v).toLocaleString('es-AR',{minimumFractionDigits:d,max
 // ===== Geometría según planos (m) — circuito horizontal =====
 const W_BIG=1.65, W_TS=0.75, LEN=14.2, DZ=2.02, YC=1.1;
 const X={v1:1.65, rem:3.05, pan:3.83, con:6.21, ts:7.84, dif:11.74, v2:LEN-1.65};
-const ZR=-DZ, CR=(W_BIG/W_TS)**2, CHORD=0.15;
+const ZR=-DZ, CR=(W_BIG/W_TS)**2;
+// Perfil ensayado (completar): cuerda y envergadura en metros. Con las dos se calcula el coeficiente C = F/(q·S).
+const CUERDA=0.25, ENVERGADURA=0.625;   // perfil asimétrico: c = 25 cm, b = 62,5 cm -> S = 0,15625 m²
+const CHORD=CUERDA||0.15, AREA=(CUERDA&&ENVERGADURA)?CUERDA*ENVERGADURA:null;
 const ALFA_MONTAJE=0;   // ángulo fijo con el que está montado el perfil (°). Cambiarlo si lo montan inclinado.
 const octR=W=>W/2/Math.cos(Math.PI/8);
 function wTest(x){
@@ -586,7 +601,7 @@ const VENCIDO_MS=15000;             // sin datos nuevos durante este tiempo = si
 
 const QS=new URLSearchParams(location.search);
 const FUENTE=QS.has('demo')?'demo':QS.get('esp')?'esp':FIREBASE_URL?'firebase':'ninguna';
-const S={hist:[],lastH:0,raw:null,rxAt:0,run0:null,link:'conectando',err:''};
+const S={fv:[],hist:[],lastH:0,raw:null,rxAt:0,run0:null,link:'conectando',err:''};
 let D={Vt:0,alarms:[]};
 const nn=v=>(v===null||v===undefined||Number.isNaN(+v))?null:+v;
 
@@ -616,7 +631,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden){ultToque=
 function ciclo(){
   const ahora=Date.now();
   if(document.hidden){setTimeout(ciclo,1000);return;}
-  if(FUENTE==='firebase'&&ahora-ultToque>PAUSA_MIN*60000){pausada=true;}
+  if(FUENTE==='firebase'&&innerWidth<1000&&ahora-ultToque>PAUSA_MIN*60000){pausada=true;}   // en PC/pantalla del túnel no se pausa
   const cada=FUENTE==='firebase'&&S.link==='apagado'?LENTO_MS:PERIODO;
   if(!pausada&&ahora-ultPedido>=cada){ultPedido=ahora;leer();}
   setTimeout(ciclo,500);
@@ -668,12 +683,14 @@ function step(dt,now){
   if(vivo&&Tmot!=null&&Tmot>TMOT_ALARMA)alarms.push('Temperatura del motor elevada');
   if(vivo&&j.falla===true)alarms.push('Falla del variador');
   if(F!=null){S.fmax=S.fmax==null?F:Math.max(S.fmax,F);}
-  D={vivo,Tamb,P,RH,T:Tin,Pin,Tmot,vib,hz,marcha,rho,V,q,mach,re,rpm,kg,F,Fmax:S.fmax,
+  const Cf=(F!=null&&q!=null&&q>5&&AREA)?F/(q*AREA):null;   // con q < 5 Pa el error es muy grande
+  D={Cf,vivo,Tamb,P,RH,T:Tin,Pin,Tmot,vib,hz,marcha,rho,V,q,mach,re,rpm,kg,F,Fmax:S.fmax,
      Vt:Va,qA,reA,rpmA:rpm!=null?rpm:Va/1.24*29.6,ilustrativo:V==null&&Va>0.5,
      Vret:V!=null?V/CR:null,dprec:q!=null?0.85*q*(1-1/(CR*CR)):null,alarms,
      run:S.run0?(now-S.run0)/1000:null,rssi:nn(j.rssi),sens:{a:!!a.ok,u:!!u.ok,m:!!m.ok,d:!!d.ok,s:!!sp.ok,h:!!hc.ok},raw:j};
   if(now-S.lastH>1000){S.lastH=now;
     if(vivo)S.hist.push([Date.now(),V,Tin,Tmot,F]);
+    if(vivo&&V!=null&&F!=null&&V>0.5){S.fv.push([V,F,q]);if(S.fv.length>900)S.fv.shift();}
     while(S.hist.length&&Date.now()-S.hist[0][0]>120000)S.hist.shift();}
 }
 
@@ -683,8 +700,8 @@ const v_=(v,d,u)=>v==null?'–':fmt(v,d)+(u?' '+u:'');      // dato que debería
 const p_=(v,d,u)=>v==null?'–':fmt(v,d)+(u?' '+u:'');      // dato calculado (sin dato = –)
 const SEC={
   ensayo:{t:'Sección de ensayo',a:new THREE.Vector3(7.0,YC+0.72,0),
-    d:'Zona de máxima velocidad donde se monta el modelo, fijo sobre su soporte, con ángulo de ataque fijo. Sección octogonal de 0,75 m y 1,63 m de largo, con ventanas y puerta lateral. Al principio de la sección, antes del modelo, un tubo Pitot impreso en 3D con toma estática de pared mide la presión dinámica con un Sensirion SDP810; la velocidad sale de v = √(2·Δp/ρ). Debajo del modelo, una celda de carga con HX711 mide la fuerza. Los hilos de lana del modelo 3D son ilustrativos.',
-    rows:()=>[['Velocidad','Pitot · SDP810',v_(D.V,1,'m/s')],['Presión dinámica q','SDP810 · medida',v_(D.q,1,'Pa')],['Fuerza en la celda','HX711 · celda de carga',D.F==null?'–':fmt(D.F,2)+' N ('+fmt(D.kg,3)+' kg)'],['Fuerza máxima','desde que se abrió la página',v_(D.Fmax,2,'N')],['Número de Mach','calculado',p_(D.mach,3)],['Reynolds','cuerda 0,15 m',D.re==null?'–':Math.round(D.re).toLocaleString('es-AR')],['Temperatura del aire','BMP280 · inicio del difusor',v_(D.T,1,'°C')]],
+    d:'Zona de máxima velocidad donde se monta el modelo, fijo sobre su soporte, con ángulo de ataque fijo. Sección octogonal de 0,75 m y 1,63 m de largo, con ventanas y puerta lateral. Al principio de la sección, antes del modelo, un tubo Pitot impreso en 3D con toma estática de pared mide la presión dinámica con un Sensirion SDP810; la velocidad sale de v = √(2·Δp/ρ). Debajo del modelo, una celda de carga con HX711 mide la fuerza de arrastre (en la dirección del viento), y con ella se calcula el coeficiente Cd = F / (q·S). Los hilos de lana del modelo 3D son ilustrativos.',
+    rows:()=>[['Velocidad','Pitot · SDP810',v_(D.V,1,'m/s')],['Presión dinámica q','SDP810 · medida',v_(D.q,1,'Pa')],['Fuerza de arrastre','celda HX711 · en la dirección del viento',D.F==null?'–':fmt(D.F,2)+' N ('+fmt(D.kg,3)+' kg)'],['Fuerza máxima','desde que se abrió la página',v_(D.Fmax,2,'N')],['Coef. de arrastre Cd','F / (q·S) · S = '+fmt(AREA*1e4,1)+' cm²',D.Cf==null?'–':fmt(D.Cf,2)],['Número de Mach','calculado',p_(D.mach,3)],['Reynolds','cuerda '+fmt(CHORD*100,0)+' cm',D.re==null?'–':Math.round(D.re).toLocaleString('es-AR')],['Temperatura del aire','BMP280 · inicio del difusor',v_(D.T,1,'°C')]],
     short:()=>D.V==null?'–':fmt(D.V)+' m/s', lbl:()=>D.V==null?`T ${v_(D.T,1,'°C')}`:`V ${fmt(D.V)} m/s · F ${v_(D.F,1,'N')}`},
   contraccion:{t:'Contracción',a:new THREE.Vector3(5.0,YC+0.95,0),
     d:`Reduce el área para acelerar el flujo: relación de contracción ${fmt(CR,2)}. No lleva sensores; las velocidades salen de la ecuación de continuidad.`,
@@ -718,7 +735,7 @@ const SEC={
     d:'ESP32 en el gabinete al lado del variador. Lee 6 sensores: dos buses I2C (D21/D22 y D5/D15), 1-Wire en D4 y el HX711 en D19/D18. Se conecta al WiFi del colegio y cada 2 s sube los datos a Firebase, donde también queda guardado el historial.',
     rows:()=>{const ok=b=>!D.vivo?'–':b?'OK':'NO RESPONDE';return [['Estado','ESP32',LINK_TXT[S.link]],['Última lectura','',S.rxAt?hace(S.rxAt):'–'],...(D.rssi!=null?[['Señal WiFi','RSSI',D.rssi+' dBm']]:[]),
       ['SDP810 · Pitot','I2C 0x25 · D21/D22',ok(D.sens.s),D.vivo&&!D.sens.s],['BMP280 · aire exterior','I2C 0x76 · D21/D22',ok(D.sens.a),D.vivo&&!D.sens.a],['BMP280 · aire interior','I2C 0x76 · D5/D15',ok(D.sens.u),D.vivo&&!D.sens.u],['MPU6050 · vibración','I2C 0x68 · D21/D22',ok(D.sens.m),D.vivo&&!D.sens.m],['DS18B20 · motor','1-Wire · D4',ok(D.sens.d),D.vivo&&!D.sens.d],
-      ['HX711 · celda de carga','D19 / D18',ok(D.sens.h),D.vivo&&!D.sens.h],['Relés del variador','marcha y falla',PEND]];},
+      ['HX711 · celda de carga','D19 / D18',ok(D.sens.h),D.vivo&&!D.sens.h]];},
     short:()=>D.vivo?SENS6().filter(Boolean).length+'/6 OK':'–', lbl:()=>`ESP32 · ${LINK_TXT[S.link]}`,
     alarm:()=>D.vivo&&SENS6().some(b=>!b)},
 };
@@ -799,6 +816,51 @@ function pick(e){
 // ===== Controles =====
 document.querySelectorAll('#views button').forEach(b=>b.onclick=()=>goView(b.dataset.v));
 document.querySelectorAll('#mode button').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+// ===== Gráfico fuerza vs. velocidad =====
+// Ajuste por mínimos cuadrados de F = k·V² (la fuerza aerodinámica crece con el cuadrado de la velocidad).
+// Con CUERDA y ENVERGADURA del perfil se calcula además el coeficiente C = F / (q·S).
+function ajusteK(){let a=0,b=0;for(const [v,f] of S.fv){const v2=v*v;a+=v2*f;b+=v2*v2;}return b>0?a/b:null;}
+function drawFV(){
+  const dpr=Math.min(devicePixelRatio,2), w=ch.clientWidth, h=ch.clientHeight; if(!w)return;
+  if(ch.width!==Math.round(w*dpr)){ch.width=Math.round(w*dpr);ch.height=Math.round(h*dpr);}
+  cx.setTransform(dpr,0,0,dpr,0,0); cx.clearRect(0,0,w,h);
+  const L=40,R=12,T=8,B=22,pw=w-L-R,ph=h-T-B;
+  const vmax=Math.max(20,...S.fv.map(p=>p[0]))*1.05, fmax=Math.max(0.5,...S.fv.map(p=>p[1]))*1.15;
+  const X=v=>L+v/vmax*pw, Y=f=>T+ph-Math.max(f,0)/fmax*ph;
+  cx.font=`600 11px ${ROUND}`; cx.fillStyle=TC.muted; cx.strokeStyle=TC.line; cx.lineWidth=1;
+  for(let i=0;i<=4;i++){const f=fmax*i/4,y=Y(f);cx.setLineDash(i?[3,4]:[]);cx.beginPath();cx.moveTo(L,y);cx.lineTo(L+pw,y);cx.stroke();cx.setLineDash([]);cx.textAlign='right';cx.textBaseline='middle';cx.fillText(fmt(f,f<10?1:0),L-5,y);}
+  cx.textAlign='center';cx.textBaseline='alphabetic';for(let v=0;v<=vmax;v+=5)cx.fillText(v,X(v),h-6);
+  cx.textAlign='left';cx.fillText('N',4,T+6);cx.textAlign='right';cx.fillText('m/s',L+pw,h-6);
+  if(S.fv.length<3){cx.textAlign='center';cx.textBaseline='middle';cx.fillText('Prendé el túnel: cada punto es una medición de fuerza y velocidad',L+pw/2,T+ph/2);$('fvK').textContent='';return;}
+  cx.fillStyle=hexA('#AF52DE',0.55);for(const [v,f] of S.fv){cx.beginPath();cx.arc(X(v),Y(f),2.6,0,6.283);cx.fill();}
+  const k=ajusteK(); if(k){cx.strokeStyle=TC.accent;cx.lineWidth=2.5;cx.beginPath();for(let v=0;v<=vmax;v+=vmax/60){const y=Y(k*v*v);v?cx.lineTo(X(v),y):cx.moveTo(X(v),y);}cx.stroke();}
+  let t='k = '+fmt(k,4)+' N/(m/s)²';
+  if(AREA){const qs=S.fv.filter(p=>p[2]>5);if(qs.length){const c=qs.reduce((a,p)=>a+p[1]/(p[2]*AREA),0)/qs.length;t+=' · Cd medio = '+fmt(c,2);}}
+  $('fvK').textContent=t;
+}
+$('fvBorrar').onclick=()=>{S.fv=[];drawChart();};
+$('cMode').querySelectorAll('button').forEach(b=>b.onclick=()=>{modoGraf=b.dataset.c;$('cMode').querySelectorAll('button').forEach(o=>o.classList.toggle('on',o===b));
+  $('cTit').textContent=modoGraf==='fv'?'Fuerza vs. velocidad':'Últimos 2 minutos';document.querySelector('.p-chart .chart-leg').hidden=modoGraf==='fv';$('legFV').hidden=modoGraf!=='fv';drawChart();});
+
+// ===== Modo exposición (pantalla del túnel) =====
+// Si nadie toca la pantalla por EXPO_SEG, la cámara recorre sola las partes del túnel.
+const EXPO_SEG=60;
+const RECORRIDO=['iso','ensayo','contraccion','remanso','iso','motor','difusor','electronica','ensayo'];
+let expoOn=false, expoI=0, expoProx=0;
+function modoExpo(){
+  const quieto=Date.now()-ultToque>EXPO_SEG*1000;
+  if(!quieto||innerWidth<1000){ if(expoOn){expoOn=false;$('expoBox').hidden=true;} return; }
+  if(!expoOn){expoOn=true;expoProx=0;$('expoBox').hidden=false;}
+  if(Date.now()>=expoProx){
+    let k=RECORRIDO[expoI++%RECORRIDO.length];
+    if(D.marcha&&expoI%2===0)k='ensayo';                 // con el túnel en marcha, se vuelve seguido al ensayo
+    if(k==='iso'){goView('iso');select('ensayo');expoProx=Date.now()+14000;}
+    else{select(k);focusOn(k);expoProx=Date.now()+9000;}
+  }
+  if(!anim)sph.th+=0.0012;                                 // giro lento
+}
+$('tFull').onclick=()=>{const d=document;if(d.fullscreenElement)d.exitFullscreen();else(d.documentElement.requestFullscreen||d.documentElement.webkitRequestFullscreen).call(d.documentElement);};
+document.addEventListener('fullscreenchange',()=>{$('tFull').textContent=document.fullscreenElement?'Salir de pantalla completa':'⛶ Pantalla completa';});
 $('tLbl').onclick=()=>{showLabels=!showLabels;labelsEl.hidden=!showLabels;$('tLbl').classList.toggle('on',showLabels);};
 $('tPts').onclick=()=>{points.visible=!points.visible;$('tPts').classList.toggle('on',points.visible);};
 
@@ -833,7 +895,9 @@ function drawASI(){
   ax.font=`600 ${W*0.044}px ${ROUND}`; ax.fillText(has?`${fmt(v*3.6,0)} km/h · ${fmt(v*1.94384,0)} kt`:'sin dato del Pitot',c,c+W*0.31);
 }
 const ch=$('chart'), cx=ch.getContext('2d');
+let modoGraf='t';
 function drawChart(){
+  if(modoGraf==='fv')return drawFV();
   const dpr=Math.min(devicePixelRatio,2), w=ch.clientWidth, h=ch.clientHeight; if(!w)return;
   if(ch.width!==Math.round(w*dpr)){ch.width=Math.round(w*dpr);ch.height=Math.round(h*dpr);}
   cx.setTransform(dpr,0,0,dpr,0,0); cx.clearRect(0,0,w,h);
@@ -894,7 +958,7 @@ step(0.016,last); applyTheme(); resize(); sph.r=fitR(15); select('ensayo'); upda
 function frame(now){
   const dt=Math.min((now-last)/1000,0.1); last=now; step(dt,now);
   if(anim){anim.k=Math.min(anim.k+dt*1.5,1);const e=anim.k*anim.k*(3-2*anim.k);target.lerpVectors(anim.f,anim.t,e);sph.r=anim.r0+(anim.r1-anim.r0)*e;sph.th=anim.th0+(anim.th1-anim.th0)*e;sph.ph=anim.ph0+(anim.ph1-anim.ph0)*e;if(anim.k>=1)anim=null;}
-  updCam();
+  modoExpo(); updCam();
   rotor.rotation.x-=D.rpmA/60*6.283*dt*0.2;
   updateTufts(now/1000);
     if(points.visible){

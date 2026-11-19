@@ -90,6 +90,9 @@ h3{margin:0 0 10px;font-size:18px;font-weight:700;letter-spacing:-.015em}
 .item .dur{font-family:var(--f-round);font-weight:700;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
 .item .dur.run{color:var(--ok)}
 .item .bad{color:var(--bad)}
+.pendp .item{grid-template-columns:auto 1fr auto;align-items:start}
+.pendp .pdot{width:10px;height:10px;border-radius:50%;background:var(--warn);margin-top:6px}
+.pendp b{font-weight:600}
 .empty{color:var(--muted);font-size:14px;padding:14px 12px}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th{font-size:12px;color:var(--muted);font-weight:600;text-align:left;padding:6px 10px;white-space:nowrap}
@@ -160,6 +163,17 @@ form.mant{display:grid;grid-template-columns:150px 1fr 160px auto;gap:8px;margin
     <div class="panel stat" id="stMant"><div class="eyebrow">Desde el último mantenimiento</div><div class="v num" id="sMant">–</div><div class="meter"><i id="sMantBar" style="width:0"></i></div><div class="s" id="sMantS">&nbsp;</div></div>
     <div class="panel stat"><div class="eyebrow">Puestas en marcha · este mes</div><div class="v num" id="sMes">–</div><div class="s" id="sMesS">&nbsp;</div></div>
     <div class="panel stat"><div class="eyebrow">Última puesta en marcha</div><div class="v num" id="sUlt">–</div><div class="s" id="sUltS">&nbsp;</div></div>
+  </section>
+
+  <!-- PENDIENTES: cuando se termine uno, borrar su <div class="item">…</div>. Si no queda ninguno, borrar toda la sección. -->
+  <section class="panel pendp">
+    <div class="rowh"><h3>Pendientes de ajuste</h3><span class="eyebrow">no se muestran en la página pública</span></div>
+    <div class="list">
+      <div class="item"><i class="pdot"></i><div><b>Calibrar la celda de carga en el lugar</b><div class="sub">Con el perfil montado: hilo y polea tirando en la dirección del viento con una pesa conocida, después TARA y CALIBRAR. Hasta entonces la fuerza y el Cd sirven para comparar ensayos, no son valores reales (el brazo de palanca cambia la escala).</div></div><span class="sub">celda</span></div>
+      <div class="item"><i class="pdot"></i><div><b>Medir el arrastre del soporte solo</b><div class="sub">Una corrida sin el perfil para saber cuánto empuja el soporte y restarlo en la página.</div></div><span class="sub">celda</span></div>
+      <div class="item"><i class="pdot"></i><div><b>Medir el ángulo de ataque</b><div class="sub">Hoy se ajusta a mano y no está medido. Anotarlo en cada ensayo.</div></div><span class="sub">perfil</span></div>
+      <div class="item"><i class="pdot"></i><div><b>Relés del variador (marcha y falla)</b><div class="sub">Sin conectar. Hoy la marcha se detecta con el Pitot o la vibración. Opcional.</div></div><span class="sub">variador</span></div>
+    </div>
   </section>
 
   <section class="grid2">
