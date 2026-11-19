@@ -90,7 +90,7 @@ h3{margin:0 0 10px;font-size:18px;font-weight:700;letter-spacing:-.015em}
 .item .sub{font-size:12.5px;color:var(--muted)}
 .item .dur{font-family:var(--f-round);font-weight:700;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
 .item .dur.run{color:var(--ok)}
-.item .bad{color:var(--bad)}
+.item .bad{color:var(--bad)} .item .warn{color:var(--warn)}
 .pendp .item{grid-template-columns:auto 1fr auto;align-items:start}
 .pendp .pdot{width:10px;height:10px;border-radius:50%;background:var(--warn);margin-top:6px}
 .pendp b{font-weight:600}
@@ -243,7 +243,7 @@ form.mant{display:grid;grid-template-columns:150px 1fr 160px auto;gap:8px;margin
       <div class="list" id="lMant"></div>
     </div>
     <div class="panel">
-      <h3>Alarmas registradas</h3>
+      <h3>Alarmas y avisos</h3>
       <div class="list" id="lAlm"></div>
     </div>
   </section>
@@ -332,6 +332,26 @@ if(DEMO){
   const last=Object.values(runs).sort((a,b)=>b.ini-a.ini)[0]; if(last){}
 }
 
+// ===== Unir tramos =====
+// Si el ESP32 se reinicia (o el viento baila cerca del umbral) una misma puesta en marcha queda
+// partida en varias. Se unen las que están separadas por menos de UNIR_SEG y se descartan los
+// tramos vacíos (sin ningún dato) de pocos segundos.
+const UNIR_SEG=90;
+function unirTramos(lista){
+  const mx=(a,b)=>a==null?b:b==null?a:Math.max(a,b);
+  const out=[];
+  for(const r of lista.slice().sort((x,y)=>x.ini-y.ini)){
+    const p=out[out.length-1];
+    if(p&&p.fin&&r.ini-p.fin<=UNIR_SEG*1000){
+      p.fin=r.fin; p.dur=((r.fin||Date.now())-p.ini)/1000; p.tramos=(p.tramos||1)+1;
+      for(const k of ['v_max','kg_max','tmot_max','vib_max','tin_max'])p[k]=mx(p[k],r[k]);
+    }else out.push({...r});
+  }
+  const vacio=r=>r.fin&&r.dur<=10&&['v_max','kg_max','tmot_max','vib_max','tin_max'].every(k=>r[k]==null);
+  return out.filter(r=>!vacio(r));
+}
+const esReinicio=a=>/^Reinicio/.test(a.tipo||'');
+
 // ===== Estado =====
 let RUNS=[], ALM=[], MANT=[], VIVO=null;
 const view={y:new Date().getFullYear(),m:new Date().getMonth(),sel:dkey(Date.now()),filtro:'mes'};
@@ -341,7 +361,8 @@ async function cargar(){
   RUNS=Object.values(c||{}).filter(r=>r&&r.ini).map(r=>{
     // si se cortó la luz con el motor andando no hay "fin": se toma el último aviso del ESP32
     const fin=r.fin||(r.ult&&Date.now()-r.ult>120000?r.ult:null);
-    return {...r,fin,dur:fin?(fin-r.ini)/1000:(Date.now()-r.ini)/1000};}).sort((x,y)=>y.ini-x.ini);
+    return {...r,fin,dur:fin?(fin-r.ini)/1000:(Date.now()-r.ini)/1000};});
+  RUNS=unirTramos(RUNS).sort((x,y)=>y.ini-x.ini);
   ALM=Object.values(a||{}).filter(x=>x&&x.ts).sort((x,y)=>y.ts-x.ts);
   MANT=Object.values(m||{}).filter(x=>x&&x.ts).sort((x,y)=>y.ts-x.ts);
   if(!DEMO&&FIREBASE_URL){try{VIVO=await (await fetch(`${FIREBASE_URL.replace(/\/$/,'')}${RAIZ}/vivo.json`,{cache:'no-store'})).json();}catch(e){VIVO=null;}}
@@ -392,7 +413,8 @@ function renderCal(){
   for(let d=1;d<=days;d++){
     const k=dkey(new Date(y,m,d)), x=DD[k], s=x?x.s:0; tot+=s; n+=x?x.n:0;
     const hh=s/3600, lvl=!s?'':hh<0.5?' l0':hh<1.5?' l1':hh<3?' l2':' l3';
-    const mk=x&&(x.alm.length||x.man.length)?`<span class="mk">${x.alm.length?'<i class="a"></i>':''}${x.man.length?'<i class="m"></i>':''}</span>`:'';
+    const nal=x?x.alm.filter(a=>!esReinicio(a)).length:0;
+    const mk=x&&(nal||x.man.length)?`<span class="mk">${nal?'<i class="a"></i>':''}${x.man.length?'<i class="m"></i>':''}</span>`:'';
     h+=`<button class="day${lvl}${k===today?' today':''}${k===view.sel?' sel':''}" data-k="${k}" aria-label="${d}: ${s?durTxt(s):'sin uso'}"><span class="n">${d}</span>${mk}<span class="h">${s?fmt(hh,1)+' h':''}</span></button>`;
   }
   $('cal').innerHTML=h;
@@ -406,7 +428,7 @@ function renderDay(){
   if(!x){$('dList').innerHTML='<div class="empty">Ese día el túnel no se usó.</div>';return;}
   const items=[
     ...x.runs.map(r=>({t:r.ini,h:`<span class="tm">${hhmm(r.ini)}${r.fin?' – '+hhmm(r.fin):''}</span><span class="sub">T motor máx. ${r.tmot_max!=null?fmt(r.tmot_max,1)+' °C':'–'} · vib. máx. <span class="${r.vib_max>VIB_ALARMA?'bad':''}">${r.vib_max!=null?fmt(r.vib_max,3)+' g':'–'}</span></span><span class="dur${r.fin?'':' run'}">${r.fin?durTxt(r.dur):'en marcha'}</span>`})),
-    ...x.alm.map(a=>({t:a.ts,h:`<span class="tm bad">${hhmm(a.ts)}</span><span class="sub bad">${esc(a.tipo)} · ${esc(a.valor)}</span><span></span>`})),
+    ...x.alm.map(a=>{const c=esReinicio(a)?'warn':'bad';return {t:a.ts,h:`<span class="tm ${c}">${hhmm(a.ts)}</span><span class="sub ${c}">${esc(a.tipo)} · ${esc(a.valor)}</span><span></span>`};}),
     ...x.man.map(a=>({t:a.ts,h:`<span class="tm" style="color:var(--ok)">Mant.</span><span class="sub">${esc(a.que)} · ${esc(a.quien)}</span><span></span>`})),
   ].sort((a,b)=>a.t-b.t);
   $('dList').innerHTML=items.map(i=>`<div class="item">${i.h}</div>`).join('');
@@ -441,8 +463,8 @@ function renderMant(){
     :'<div class="empty">Todavía no se anotó ningún mantenimiento.</div>';
 }
 function renderAlm(){
-  $('lAlm').innerHTML=ALM.length?ALM.slice(0,50).map(a=>`<div class="item"><span class="tm">${fecha(a.ts)}</span><span class="sub"><span class="bad">${esc(a.tipo)}</span> · ${hhmm(a.ts)}</span><span class="dur bad">${esc(a.valor)}</span></div>`).join('')
-    :'<div class="empty">Sin alarmas registradas.</div>';
+  $('lAlm').innerHTML=ALM.length?ALM.slice(0,50).map(a=>`<div class="item"><span class="tm">${fecha(a.ts)}</span><span class="sub"><span class="${esReinicio(a)?'warn':'bad'}">${esc(a.tipo)}</span> · ${hhmm(a.ts)}</span><span class="dur ${esReinicio(a)?'warn':'bad'}">${esc(a.valor)}</span></div>`).join('')
+    :'<div class="empty">Sin alarmas ni avisos.</div>';
 }
 
 // ===== Historial: ver y bajar CSV =====
